@@ -1,0 +1,7 @@
+1) ZIP'i Tümünü ayıkla ile aç.
+2) Açılan klasörün içindeki .github ve scripts klasörlerini GitHub Upload files alanına sürükle.
+3) Commit changes'e bas.
+4) GitHub'da Actions sekmesinde "Apply Vercel function-limit fix" işleminin yeşil olmasını bekle.
+5) İşlem otomatik olarak eski API dosyalarını siler, API'leri 4 Vercel Function'a birleştirir ve yeni commit oluşturur.
+
+Hiçbir dosyayı elle silme.
