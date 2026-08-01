@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BtgLanguageSystem from "@/components/BtgLanguageSystem";
 import { AIAssistantWidget } from "@/components/AIAssistantWidget";
 import { AutoSlitherStage } from "@/components/AutoSlitherStage";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -44,7 +45,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
 
             <div className="flex flex-col gap-3 xl:items-end">
-              <ThemePicker />
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <ThemePicker />
+                <BtgLanguageSystem />
+              </div>
               <Navigation />
             </div>
           </div>

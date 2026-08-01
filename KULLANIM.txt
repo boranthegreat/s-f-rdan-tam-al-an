@@ -1,0 +1,15 @@
+BU DOSYA HAZIR WEBSITE PROJESIDIR.
+
+1) ZIP'i aç.
+2) İçindeki bütün dosyaları mevcut GitHub projenin dosyalarıyla değiştir.
+3) GitHub'a yükle/commit et.
+4) Vercel otomatik olarak yeniden yayınlar.
+
+Dil seçici sitenin üst kısmında görünür:
+- Türkçe
+- English
+- Ελληνικά
+
+Doğrudan test adresleri:
+- /?lang=en
+- /?lang=el

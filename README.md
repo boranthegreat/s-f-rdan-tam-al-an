@@ -108,3 +108,16 @@ Vercel'de proje içinden:
 - Finansal veriler bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
 - API hatalarında kullanıcıya okunabilir hata mesajı gösterilir.
 - Veriler yüklenirken skeleton kartları kullanılır.
+
+## Çoklu Dil Desteği
+
+Site Türkçe, İngilizce ve Yunanca arayüz seçeneklerini destekler.
+
+- Türkçe: `?lang=tr` veya parametresiz varsayılan görünüm
+- İngilizce: `?lang=en`
+- Yunanca: `?lang=el`
+- Dil seçimi üst menüdeki dil düğmesinden yapılır.
+- Seçim tarayıcıda saklanır ve sayfalar arasında korunur.
+- Sonradan yüklenen piyasa ve hava verilerindeki arayüz ifadeleri de çevrilir.
+
+Çoklu dil sistemi `components/BtgLanguageSystem.tsx` dosyasındadır ve `components/AppShell.tsx` içinden çağrılır.
