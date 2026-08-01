@@ -1,0 +1,18 @@
+BORANTHEGREAT V3'Ü YÜKLEME
+
+1. Bu ZIP dosyasına sağ tıkla.
+2. “Tümünü ayıkla” seçeneğine bas.
+3. Açılan klasörün içine gir.
+4. Ctrl + A ile içindeki her şeyi seç.
+5. GitHub'da s-f-rdan-tam-al-an projesini aç.
+6. Add file > Upload files seçeneğine bas.
+7. Seçtiğin bütün dosyaları büyük yükleme kutusuna sürükle.
+8. Yükleme bitince yeşil “Commit changes” butonuna bas.
+9. Vercel'in deploy işlemini tamamlamasını bekle.
+
+ZIP dosyasını doğrudan GitHub'a atma. ZIP'in içindeki dosya ve klasörleri yükle.
+
+İlk kontrol adresleri:
+https://boranthegreat.xyz/tr
+https://boranthegreat.xyz/en
+https://boranthegreat.xyz/el

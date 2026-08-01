@@ -1,33 +1,44 @@
-# BoranTheGreat Çoklu Dil Denetimi
+# Türkçe – İngilizce – Yunanca Çeviri Denetimi
 
 ## Kapsam
 
-- Türkçe (`tr`)
-- İngilizce (`en`)
-- Yunanca (`el`)
-- Ana panel, döviz, altın, coin, hava durumu, favoriler, portföy, alarmlar, haberler, arama, ayarlar, komut paleti, ipuçları ve BorAI arayüzü
-- Düğmeler, başlıklar, açıklamalar, form alanları, hata durumları, erişilebilirlik etiketleri ve dinamik durum metinleri
+- Navigasyon ve üst menü
+- Ana panel
+- Döviz ve altın
+- Coin listesi ve coin detayları
+- Döviz detayları
+- Hava durumu
+- Favoriler, portföy, fiyat alarmları ve piyasa notları
+- Haberler ve ekonomi takvimi
+- Ayarlar, tema, PWA, bulut hesabı ve push bildirimi
+- Hata mesajları, form etiketleri, erişilebilirlik metinleri ve dinamik sayaçlar
+- Para birimi adları
 
-## Sonuçlar
+## Sonuç
 
-- 358 benzersiz çeviri girdisi
-- Yinelenen çeviri anahtarı: 0
-- Boş Türkçe/İngilizce/Yunanca değer: 0
-- İncelenen TypeScript/TSX dosyası: 88
-- Sözdizimi hatası: 0
-- Eksik yerel import: 0
-- Statik taramada çevrilmeden kalan muhtemel kullanıcı arayüzü metni: 0
-- Dinamik çeviri testleri: 10/10 başarılı
+- 491 benzersiz arayüz çeviri girdisi
+- Yinelenen anahtar: 0
+- Boş Türkçe değer: 0
+- Boş İngilizce değer: 0
+- Boş Yunanca değer: 0
+- Dinamik çeviri senaryosu: 20/20 başarılı
+- Görünen TSX arayüz metni taraması: doğrulanmış eksik çeviri yok
 
-## Dil Davranışı
+## Dinamik olarak ele alınan yapılar
 
-- Dil seçici sitenin üst bölümüne yerleştirildi.
-- Seçim LocalStorage ve çerezde saklanır.
-- Sayfa değişimlerinde seçilen dil korunur.
-- `?lang=en` ve `?lang=el` doğrudan bağlantıları desteklenir.
-- Belge dili, başlık ve temel paylaşım açıklamaları seçime göre güncellenir.
-- Canlı API verileri sonradan yüklendiğinde yeni arayüz metinleri otomatik çevrilir.
+- “3 pozisyon” gibi adet ifadeleri
+- “2 tetiklenen alarm” gibi çoğul yapılar
+- “Son güncelleme: …” ve “Son yenileme …”
+- “Bitcoin hakkında” gibi dilde kelime sırası değişen başlıklar
+- “1 USD değerinin farklı para birimlerindeki…” gibi dinamik para birimi cümleleri
+- Dil değiştirildiğinde iç bağlantılar, belge dili ve paylaşım metadata metinleri
 
-## Build Notu
+## Dış içerik notu
 
-Bu çalışma ortamındaki paket deposu, projede kullanılan `@types/node@26.0.0` paketini sunmadığı için burada bağımlılık kurulumu ve tam `next build` çalıştırılamadı. Kaynak kod sözdizimi, yerel importlar, çeviri bütünlüğü ve dinamik çeviri fonksiyonları ayrı kontrollerden geçirilmiştir. GitHub/Vercel dağıtımında normal paket deposu üzerinden `pnpm install` ve `pnpm build` çalıştırılmalıdır.
+Haber başlıkları ilgili dildeki GDELT kaynaklarından istenir. Finnhub ekonomik etkinlik başlıkları sağlayıcının sunduğu özgün dilde görünebilir. Bu metinler site arayüzü çevirisi değil, dış kaynaktan gelen yayın içeriğidir.
+
+## Dil kalitesi notları
+
+- Yunanca metinlerde yarım İngilizce kalan genel arayüz ifadeleri temizlendi; `cloud`, `Web Push`, Google, Supabase ve VAPID gibi yerleşik teknik adlar gerektiği yerde korundu.
+- Hava durumu durumları, BorAI karşılama metni, favori türleri ve API yedek durumları ayrıca denetlendi.
+- Haber ve coin açıklaması gibi dış kaynak metinleri istenen dilde sağlayıcıdan alınır; sağlayıcının özgün içeriği arayüz çevirisi olarak değiştirilmez.

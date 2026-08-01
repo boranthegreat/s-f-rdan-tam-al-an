@@ -1,123 +1,67 @@
-# BoranTheGreat
+# BoranTheGreat V3
 
-Modern, koyu temalı, mobil uyumlu finans ve hava durumu takip sitesi. Next.js App Router, TypeScript, Tailwind CSS ve Recharts ile hazırlandı.
+BoranTheGreat; döviz, kripto, altın, ekonomi haberleri, fiyat alarmları ve dünya hava durumunu tek panelde birleştiren çok dilli bir Next.js uygulamasıdır.
 
-Canlı domain hedefi: `https://boranthegreat.xyz`
+Canlı domain: `https://boranthegreat.xyz`
 
-## Kurulum
+## V3 ile eklenenler
+
+- Gerçek dil adresleri: `/tr`, `/en`, `/el`
+- Her dil için canonical ve `hreflang` metadata
+- Coin detay sayfaları ve saatlik 24 saat / 7 gün / 1 ay / 1 yıl grafikleri
+- Döviz detay sayfaları ve 7 gün / 1 ay / 3 ay / 1 yıl grafikleri
+- Coin ve döviz detayından favori, portföy ve alarm işlemleri
+- GDELT tabanlı canlı ekonomi, kripto, döviz ve dünya haberleri
+- Opsiyonel Finnhub canlı ekonomi takvimi
+- Google giriş ve Supabase tabanlı cihazlar arası senkronizasyon altyapısı
+- Site kapalıyken çalışabilen Web Push fiyat alarmı altyapısı
+- Kurulabilir PWA, çevrimdışı ekranı ve service worker
+- Üst menüde sade tema seçici
+- Türkçe, İngilizce ve Yunanca arayüz çevirileri
+
+## Hemen çalışan özellikler
+
+GitHub'a yüklenip Vercel deploy olduğunda; dil adresleri, detay sayfaları, grafikler, canlı haberler, PWA, çevrimdışı ekranı, tema menüsü ve mevcut yerel portföy/favori/alarm sistemi ek ayar gerektirmeden çalışır.
+
+Google giriş, bulut senkronizasyonu, arka plan push bildirimleri ve canlı ekonomi takvimi için dış servis anahtarları gerekir. Anahtarlar yokken bu bölümler siteyi bozmaz; arayüz açık biçimde kurulum gerektiğini belirtir.
+
+## Yerel kurulum
 
 ```bash
 npm install
 npm run dev
 ```
 
-Tarayıcıda `http://localhost:3000` adresini açın.
+Tarayıcıda `http://localhost:3000` açılır ve otomatik olarak `/tr` adresine yönlendirilir.
 
-## Build Kontrolü
+## Kontrol
 
 ```bash
 npm run lint
 npm run build
 ```
 
-## Yayına Almadan Önce Kontrol Listesi
-
-- `npm run lint` ve `npm run build` hatasız geçmeli.
-- `.env.local` veya Vercel Environment Variables içinde `NEXT_PUBLIC_SITE_URL=https://boranthegreat.xyz` olmalı.
-- BorAI'nin güçlü cevap modu için Vercel'e `OPENAI_API_KEY` eklenmeli.
-- Vercel domain ayarlarında `boranthegreat.xyz` ve istenirse `www.boranthegreat.xyz` eklenmeli.
-- DNS kayıtları Vercel'in verdiği değerlerle eşleşmeli.
-- Vercel deploy sonrası otomatik SSL aktif görünmeli.
-- Ana sayfa, Döviz, Coin, Hava Durumu, Favoriler ve Ayarlar sayfaları mobilde test edilmeli.
-- Coin, döviz, altın ve hava durumu API hata mesajları kullanıcıya düzgün görünüyor mu kontrol edilmeli.
-- Footer'daki "yatırım tavsiyesi değildir" uyarısı yayında görünür kalmalı.
-- Logoya tıklayınca Instagram yönlendirmesi çalışmalı.
-
-## Ortam Değişkenleri
-
-`.env.example` dosyasını `.env.local` olarak kopyalayabilirsiniz:
+VAPID anahtarı üretmek için:
 
 ```bash
-NEXT_PUBLIC_APP_NAME=BoranTheGreat
-NEXT_PUBLIC_SITE_URL=https://boranthegreat.xyz
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
+npm run generate:vapid
 ```
 
-Seçilen piyasa ve hava durumu API'leri API key gerektirmez. `OPENAI_API_KEY` boş kalırsa AI Asistan yerel akıllı modda çalışır; anahtar eklerseniz OpenAI destekli cevap moduna geçer.
+Dış servislerin kurulumu için `KURULUM.md`, GitHub'a yükleme için `YUKLEME.txt` dosyasını açın.
 
-## Sayfalar
+## Temel teknoloji
 
-- Ana Panel
-- Döviz ve Altın Takip
-- Coin Takip
-- Dünya Hava Durumu
-- Favoriler
-- Portföy
-- Alarmlar
-- Haberler
-- Genel Arama
-- Ayarlar
+- Next.js App Router
+- React ve TypeScript
+- Tailwind CSS
+- Recharts
+- Supabase REST/Auth altyapısı
+- Web Push + Service Worker
+- GDELT haber API'si
+- Finnhub ekonomi takvimi (opsiyonel)
 
-## Kullanılan API'ler
+## Güvenlik notları
 
-- Frankfurter API: döviz kurları, geçmiş döviz grafikleri ve döviz çevirici
-- CoinGecko API: coin fiyatları, hacim, market cap ve sparkline verileri
-- CoinLore API: CoinGecko erişilemezse yedek coin verisi
-- Open-Meteo Geocoding API: şehir arama
-- Open-Meteo Forecast API: anlık hava durumu ve 7 günlük tahmin
-- Yahoo Finance: yaklaşık altın ons verisi
-- OpenAI Responses API: opsiyonel AI Asistan cevapları
-
-## Vercel Deploy
-
-1. Projeyi GitHub'a gönderin.
-2. Vercel panelinde `New Project` ile repoyu seçin.
-3. Framework olarak Next.js otomatik algılanır.
-4. Build komutu: `npm run build`
-5. Environment Variables alanına gerekiyorsa şunları ekleyin:
-   - `NEXT_PUBLIC_APP_NAME=BoranTheGreat`
-   - `NEXT_PUBLIC_SITE_URL=https://boranthegreat.xyz`
-   - `OPENAI_API_KEY`
-   - `OPENAI_MODEL=gpt-4o-mini`
-6. `Deploy` butonuna basın.
-
-## boranthegreat.xyz Domain Bağlama
-
-Vercel'de proje içinden:
-
-1. `Settings > Domains` bölümüne gidin.
-2. `boranthegreat.xyz` domainini ekleyin.
-3. Vercel'in verdiği DNS kayıtlarını domain aldığınız panelde girin.
-4. Genelde apex domain için `A` kaydı, `www` için `CNAME` kaydı verilir.
-5. DNS yayıldıktan sonra Vercel otomatik SSL sertifikası verir.
-
-## Yayın İçin Eklenenler
-
-- SEO metadata
-- Open Graph ve Twitter paylaşım kartları
-- `sitemap.xml`
-- `robots.txt`
-- PWA manifest
-- SVG site ikonu
-- `boranthegreat.xyz` canonical ayarları
-
-## Notlar
-
-- Favoriler tarayıcı LocalStorage üzerinde saklanır.
-- Finansal veriler bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
-- API hatalarında kullanıcıya okunabilir hata mesajı gösterilir.
-- Veriler yüklenirken skeleton kartları kullanılır.
-
-## Çoklu Dil Desteği
-
-Site Türkçe, İngilizce ve Yunanca arayüz seçeneklerini destekler.
-
-- Türkçe: `?lang=tr` veya parametresiz varsayılan görünüm
-- İngilizce: `?lang=en`
-- Yunanca: `?lang=el`
-- Dil seçimi üst menüdeki dil düğmesinden yapılır.
-- Seçim tarayıcıda saklanır ve sayfalar arasında korunur.
-- Sonradan yüklenen piyasa ve hava verilerindeki arayüz ifadeleri de çevrilir.
-
-Çoklu dil sistemi `components/BtgLanguageSystem.tsx` dosyasındadır ve `components/AppShell.tsx` içinden çağrılır.
+- `SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_KEY`, `CRON_SECRET`, `FINNHUB_API_KEY` ve `OPENAI_API_KEY` yalnızca Vercel Environment Variables alanında tutulmalıdır.
+- Gerçek anahtarlar GitHub'a veya `.env.example` dosyasına yazılmamalıdır.
+- Fiyat ve piyasa verileri bilgilendirme amaçlıdır; yatırım tavsiyesi değildir.
