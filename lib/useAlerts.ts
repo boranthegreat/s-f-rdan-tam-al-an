@@ -47,8 +47,10 @@ export function useAlerts() {
   const alerts = useMemo(() => JSON.parse(snapshot) as PriceAlert[], [snapshot]);
 
   function addAlert(alert: Omit<PriceAlert, "id" | "createdAt">) {
+    if (!Number.isFinite(alert.target) || alert.target <= 0) return;
+    const existing = readAlerts().slice(-49);
     writeAlerts([
-      ...readAlerts(),
+      ...existing,
       {
         ...alert,
         id: crypto.randomUUID(),

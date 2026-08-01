@@ -4,9 +4,10 @@ import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { stripLocalePrefix } from "@/lib/i18n";
 
 export function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: LucideIcon }) {
-  const pathname = usePathname();
+  const pathname = stripLocalePrefix(usePathname());
   const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (

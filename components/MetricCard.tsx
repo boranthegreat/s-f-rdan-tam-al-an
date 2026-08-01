@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import Link from "next/link";
 import { FavoriteButton } from "@/components/FavoriteButton";
 
 export function MetricCard({
@@ -8,7 +9,8 @@ export function MetricCard({
   tone = "neutral",
   isFavorite,
   onFavorite,
-  onClick
+  onClick,
+  href
 }: {
   label: string;
   value: string;
@@ -17,6 +19,7 @@ export function MetricCard({
   isFavorite?: boolean;
   onFavorite?: () => void;
   onClick?: () => void;
+  href?: string;
 }) {
   return (
     <div
@@ -51,6 +54,15 @@ export function MetricCard({
         >
           {detail}
         </p>
+      ) : null}
+      {href ? (
+        <Link
+          href={href}
+          onClick={(event) => event.stopPropagation()}
+          className="mt-4 block rounded-xl border border-mint/20 bg-mint/5 px-3 py-2 text-center text-xs font-bold text-mint transition hover:bg-mint/10"
+        >
+          Detay sayfasını aç
+        </Link>
       ) : null}
     </div>
   );

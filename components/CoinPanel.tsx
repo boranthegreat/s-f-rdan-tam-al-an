@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { type ImageLoaderProps } from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AssetHistoryDialog } from "@/components/AssetHistoryDialog";
 import { BarChartCard } from "@/components/ChartCard";
@@ -144,6 +145,13 @@ export function CoinPanel({ compact = false }: { compact?: boolean }) {
                 Piyasa değeri: {hasValue(coin.market_cap) ? formatNumber(coin.market_cap) : "N/A"}
               </span>
             </div>
+            <Link
+              href={`/coins/${coin.id}`}
+              className="mt-4 block rounded-xl border border-mint/20 bg-mint/5 px-3 py-2 text-center text-xs font-bold text-mint transition hover:bg-mint/10"
+              onClick={(event) => event.stopPropagation()}
+            >
+              Detay sayfasını aç
+            </Link>
           </div>
         ))}
       </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { CloudAccountPanel } from "@/components/CloudAccountPanel";
+import { PushNotificationControl } from "@/components/PushNotificationControl";
 import { ThemePicker } from "@/components/ThemePicker";
 import { useUserSettings, type UserSettings } from "@/lib/useUserSettings";
 
@@ -7,13 +9,14 @@ export function SettingsPanel() {
   const { settings, updateSettings } = useUserSettings();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-2">
       <div className="glass-card p-5">
         <p className="text-xs uppercase tracking-[0.24em] text-mint">Tema</p>
         <h2 className="mt-2 text-2xl font-black text-white">Renk modu</h2>
         <p className="mt-2 text-sm text-slate-400">Panelin vurgu rengini seç.</p>
         <div className="mt-5">
-          <ThemePicker />
+          <ThemePicker expanded />
         </div>
       </div>
 
@@ -50,6 +53,11 @@ export function SettingsPanel() {
             Daha kompakt ana panel
           </label>
         </div>
+      </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <CloudAccountPanel />
+        <PushNotificationControl />
       </div>
     </div>
   );

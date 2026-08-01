@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PushNotificationControl } from "@/components/PushNotificationControl";
 import { getCoinMarkets } from "@/lib/api/coins";
 import { convertCurrency } from "@/lib/api/currency";
 import { getGoldRate } from "@/lib/api/gold";
@@ -62,6 +63,7 @@ export function AlertsPanel({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className="space-y-6">
+      <PushNotificationControl />
       <div className="glass-card grid gap-3 p-5 md:grid-cols-[1fr_1fr_1fr_1fr_auto]">
         <select
           className="premium-input"

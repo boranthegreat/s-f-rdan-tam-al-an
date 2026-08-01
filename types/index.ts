@@ -110,3 +110,49 @@ export type AssistantResponse = {
   mode: "ai" | "local";
   suggestions: string[];
 };
+
+export type CoinDetail = {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  description: string;
+  homepage?: string;
+  currentPrice: number;
+  marketCap: number;
+  totalVolume: number;
+  high24h: number;
+  low24h: number;
+  ath: number;
+  circulatingSupply: number;
+  totalSupply: number | null;
+  change24h: number;
+  change7d: number;
+  change30d: number;
+  lastUpdated: string;
+  history: Array<{ date: string; value: number }>;
+  history24h: Array<{ date: string; value: number }>;
+};
+
+export type MarketNewsItem = {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+  image?: string;
+  category: "crypto" | "forex" | "economy" | "world";
+};
+
+export type EconomicEvent = {
+  id: string;
+  date: string;
+  time?: string;
+  country: string;
+  title: string;
+  impact: "low" | "medium" | "high";
+  actual?: string | number | null;
+  estimate?: string | number | null;
+  previous?: string | number | null;
+  source?: string;
+};

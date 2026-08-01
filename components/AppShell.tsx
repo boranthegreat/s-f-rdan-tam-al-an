@@ -1,11 +1,13 @@
 import Link from "next/link";
 import BtgLanguageSystem from "@/components/BtgLanguageSystem";
 import { AIAssistantWidget } from "@/components/AIAssistantWidget";
+import { AuthMenu } from "@/components/AuthMenu";
 import { AutoSlitherStage } from "@/components/AutoSlitherStage";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CursorEffects } from "@/components/CursorEffects";
 import { FloatingTips } from "@/components/FloatingTips";
 import { Navigation } from "@/components/Navigation";
+import { PwaInstallButton } from "@/components/PwaInstallButton";
 import { ThemePicker } from "@/components/ThemePicker";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -46,6 +48,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex flex-col gap-3 xl:items-end">
               <div className="flex flex-wrap items-center justify-end gap-2">
+                <PwaInstallButton />
+                <AuthMenu />
                 <ThemePicker />
                 <BtgLanguageSystem />
               </div>

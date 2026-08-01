@@ -51,7 +51,7 @@ export default function Image() {
         </div>
 
         <div style={{ display: "flex", gap: 18 }}>
-          {["Döviz", "Coin", "Altın", "Hava Durumu", "BorAI"].map((item) => (
+          {["FX", "CRYPTO", "GOLD", "WEATHER", "BorAI"].map((item) => (
             <div
               key={item}
               style={{

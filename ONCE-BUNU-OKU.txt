@@ -1,0 +1,10 @@
+BORANTHEGREAT ONARIM PAKETI
+
+1. Bu ZIP'i 'Tümünü ayıkla' ile çıkar.
+2. Açılan BORANTHEGREAT-ONARIM klasörüne gir.
+3. Ctrl + A ile içerideki her şeyi seç.
+4. GitHub projesinde Add file > Upload files ekranını aç.
+5. Seçtiklerini büyük yükleme kutusuna sürükle.
+6. Dosyalar bitince Commit changes'e bas.
+
+Bu paket 100 dosyanın altındadır ve eksik klasörleri doğru konumlarına yerleştirir.

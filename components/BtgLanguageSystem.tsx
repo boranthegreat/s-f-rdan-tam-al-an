@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const LOCALES = {
   tr: { label: "Türkçe", flag: "🇹🇷", htmlLang: "tr", selectorLabel: "Dil seçici" },
@@ -259,7 +259,7 @@ const EXTRA_T = {
   "Başkent seç ve canlı tahmini aç": { tr: "Başkent seç ve canlı tahmini aç", en: "Select a capital and open the live forecast", el: "Επίλεξε πρωτεύουσα και άνοιξε τη ζωντανή πρόγνωση" },
   "Başkentler ve şehir arama": { tr: "Başkentler ve şehir arama", en: "Capitals and city search", el: "Πρωτεύουσες και αναζήτηση πόλεων" },
   "Bekleniyor": { tr: "Bekleniyor", en: "Waiting", el: "Αναμονή" },
-  "BG logosunun üstünde mouse gezdir; mini slither hareket eder.": { tr: "BG logosunun üzerinde fareyi gezdir; mini slither hareket eder.", en: "Move the pointer over the BG logo to animate the mini slither.", el: "Μετακίνησε τον δείκτη πάνω από το λογότυπο BG για να κινηθεί το μικρό slither." },
+  "BG logosunun üstünde mouse gezdir; mini slither hareket eder.": { tr: "BG logosunun üzerinde fareyi gezdir; mini slither hareket eder.", en: "Move the pointer over the BG logo to animate the mini slither.", el: "Μετακίνησε τον δείκτη πάνω από το λογότυπο BG για να κινηθεί το μικρό φιδάκι." },
   "Bir sey sor...": { tr: "Bir şey sor...", en: "Ask something...", el: "Ρώτησε κάτι..." },
   "BoranTheGreat Instagram hesabını aç": { tr: "BoranTheGreat Instagram hesabını aç", en: "Open the BoranTheGreat Instagram account", el: "Άνοιγμα του λογαριασμού BoranTheGreat στο Instagram" },
   "Bugün neye bakmalı?": { tr: "Bugün neye bakmalı?", en: "What should you watch today?", el: "Τι αξίζει να παρακολουθήσεις σήμερα;" },
@@ -400,7 +400,140 @@ const EXTRA_T = {
   "Yüksek dikkat": { tr: "Yüksek dikkat", en: "High caution", el: "Υψηλή προσοχή" },
   "Oynaklık": { tr: "Oynaklık", en: "Volatility", el: "Μεταβλητότητα" },
   "Son yenileme": { tr: "Son yenileme", en: "Last refresh", el: "Τελευταία ανανέωση" },
+  "Uygulamayı yükle": { tr: "Uygulamayı yükle", en: "Install app", el: "Εγκατάσταση εφαρμογής" },
+  "Safari’de Paylaş düğmesine, ardından “Ana Ekrana Ekle” seçeneğine bas.": { tr: "Safari’de Paylaş düğmesine, ardından “Ana Ekrana Ekle” seçeneğine bas.", en: "In Safari, tap Share and then Add to Home Screen.", el: "Στο Safari, πάτησε Κοινοποίηση και έπειτα Προσθήκη στην οθόνη Αφετηρίας." },
+  "Google ile giriş": { tr: "Google ile giriş", en: "Sign in with Google", el: "Σύνδεση με Google" },
+  "Google ile giriş yap": { tr: "Google ile giriş yap", en: "Sign in with Google", el: "Σύνδεση με Google" },
+  "Bulut kurulumu": { tr: "Bulut kurulumu", en: "Cloud setup", el: "Ρύθμιση cloud" },
+  "Bulut hesabı": { tr: "Bulut hesabı", en: "Cloud account", el: "Λογαριασμός cloud" },
+  "Bulutla eşitlendi": { tr: "Bulutla eşitlendi", en: "Synced to cloud", el: "Συγχρονίστηκε στο cloud" },
+  "Kaydediliyor...": { tr: "Kaydediliyor...", en: "Saving...", el: "Αποθήκευση..." },
+  "Senkronizasyon kontrol ediliyor": { tr: "Senkronizasyon kontrol ediliyor", en: "Checking sync", el: "Έλεγχος συγχρονισμού" },
+  "Şimdi eşitle": { tr: "Şimdi eşitle", en: "Sync now", el: "Συγχρονισμός τώρα" },
+  "Çıkış yap": { tr: "Çıkış yap", en: "Sign out", el: "Αποσύνδεση" },
+  "Cihazlar arası senkronizasyon": { tr: "Cihazlar arası senkronizasyon", en: "Cross-device sync", el: "Συγχρονισμός μεταξύ συσκευών" },
+  "Portföy, favoriler, alarmlar, notlar, tema ve dil tercihi hesabına kaydedilir.": { tr: "Portföy, favoriler, alarmlar, notlar, tema ve dil tercihi hesabına kaydedilir.", en: "Your portfolio, favorites, alerts, notes, theme and language preference are saved to your account.", el: "Το χαρτοφυλάκιο, τα αγαπημένα, οι ειδοποιήσεις, οι σημειώσεις, το θέμα και η γλώσσα αποθηκεύονται στον λογαριασμό σου." },
+  "Her şey bulutla eşitlendi": { tr: "Her şey bulutla eşitlendi", en: "Everything is synced to the cloud", el: "Όλα έχουν συγχρονιστεί στο cloud" },
+  "Değişiklikler kaydediliyor": { tr: "Değişiklikler kaydediliyor", en: "Saving changes", el: "Αποθήκευση αλλαγών" },
+  "Gerçek bildirim": { tr: "Gerçek bildirim", en: "Push notifications", el: "Ειδοποιήσεις push" },
+  "Site kapalıyken fiyat alarmı": { tr: "Site kapalıyken fiyat alarmı", en: "Price alerts while the site is closed", el: "Ειδοποιήσεις τιμής όταν ο ιστότοπος είναι κλειστός" },
+  "Google hesabın ve push altyapısı bağlandığında hedef gerçekleşince cihazına bildirim gelir.": { tr: "Google hesabın ve push altyapısı bağlandığında hedef gerçekleşince cihazına bildirim gelir.", en: "Once your Google account and push service are connected, your device is notified when a target is reached.", el: "Όταν συνδεθούν ο λογαριασμός Google και η υπηρεσία push, η συσκευή σου ειδοποιείται μόλις επιτευχθεί ένας στόχος." },
+  "Bildirimleri aç": { tr: "Bildirimleri aç", en: "Enable notifications", el: "Ενεργοποίηση ειδοποιήσεων" },
+  "Bildirimleri kapat": { tr: "Bildirimleri kapat", en: "Disable notifications", el: "Απενεργοποίηση ειδοποιήσεων" },
+  "Arka plan fiyat bildirimleri açıldı.": { tr: "Arka plan fiyat bildirimleri açıldı.", en: "Background price notifications are enabled.", el: "Οι ειδοποιήσεις τιμών στο παρασκήνιο ενεργοποιήθηκαν." },
+  "Arka plan bildirimleri kapatıldı.": { tr: "Arka plan bildirimleri kapatıldı.", en: "Background notifications are disabled.", el: "Οι ειδοποιήσεις στο παρασκήνιο απενεργοποιήθηκαν." },
+  "Bu tarayıcı Web Push özelliğini desteklemiyor.": { tr: "Bu tarayıcı Web Push özelliğini desteklemiyor.", en: "This browser does not support Web Push.", el: "Αυτό το πρόγραμμα περιήγησης δεν υποστηρίζει Web Push." },
+  "Detay sayfasını aç": { tr: "Detay sayfasını aç", en: "Open details", el: "Άνοιγμα λεπτομερειών" },
+  "Güncel fiyat": { tr: "Güncel fiyat", en: "Current price", el: "Τρέχουσα τιμή" },
+  "24s değişim": { tr: "24s değişim", en: "24h change", el: "Μεταβολή 24ώρου" },
+  "24s en yüksek": { tr: "24s en yüksek", en: "24h high", el: "Υψηλό 24ώρου" },
+  "24s en düşük": { tr: "24s en düşük", en: "24h low", el: "Χαμηλό 24ώρου" },
+  "Tüm zamanlar zirvesi": { tr: "Tüm zamanlar zirvesi", en: "All-time high", el: "Ιστορικό υψηλό" },
+  "Dolaşımdaki arz": { tr: "Dolaşımdaki arz", en: "Circulating supply", el: "Κυκλοφορούσα προσφορά" },
+  "Portföye 1 adet ekle": { tr: "Portföye 1 adet ekle", en: "Add 1 unit to portfolio", el: "Προσθήκη 1 μονάδας στο χαρτοφυλάκιο" },
+  "Portföye ekle": { tr: "Portföye ekle", en: "Add to portfolio", el: "Προσθήκη στο χαρτοφυλάκιο" },
+  "USD alarmı kur": { tr: "USD alarmı kur", en: "Set USD alert", el: "Ορισμός ειδοποίησης USD" },
+  "Fiyat geçmişi": { tr: "Fiyat geçmişi", en: "Price history", el: "Ιστορικό τιμής" },
+  "hakkında": { tr: "hakkında", en: "About", el: "Σχετικά με" },
+  "Resmî site": { tr: "Resmî site", en: "Official website", el: "Επίσημος ιστότοπος" },
+  "Son güncelleme:": { tr: "Son güncelleme:", en: "Last updated:", el: "Τελευταία ενημέρωση:" },
+  "Hedef fiyat": { tr: "Hedef fiyat", en: "Target price", el: "Τιμή-στόχος" },
+  "değerinin farklı para birimlerindeki güncel karşılığı.": { tr: "değerinin farklı para birimlerindeki güncel karşılığı.", en: "current value in different currencies.", el: "τρέχουσα αξία σε διαφορετικά νομίσματα." },
+  "Ekonomi": { tr: "Ekonomi", en: "Economy", el: "Οικονομία" },
+  "Kripto": { tr: "Kripto", en: "Crypto", el: "Κρυπτονομίσματα" },
+  "Dünya": { tr: "Dünya", en: "World", el: "Κόσμος" },
+  "Yenile": { tr: "Yenile", en: "Refresh", el: "Ανανέωση" },
+  "Haberi aç": { tr: "Haberi aç", en: "Open article", el: "Άνοιγμα άρθρου" },
+  "Canlı ekonomi takvimi için Vercel’e": { tr: "Canlı ekonomi takvimi için Vercel’e", en: "For a live economic calendar, add", el: "Για ζωντανό οικονομικό ημερολόγιο, πρόσθεσε" },
+  "eklenmeli. Şu an güvenli örnek görünüm gösteriliyor.": { tr: "eklenmeli. Şu an güvenli örnek görünüm gösteriliyor.", en: "to Vercel. A safe sample view is currently shown.", el: "στο Vercel. Προς το παρόν εμφανίζεται ασφαλές δείγμα." },
+  "Gerçekleşen": { tr: "Gerçekleşen", en: "Actual", el: "Πραγματικό" },
+  "Beklenti": { tr: "Beklenti", en: "Forecast", el: "Πρόβλεψη" },
+  "Önceki": { tr: "Önceki", en: "Previous", el: "Προηγούμενο" },
+  "Şu anda çevrimdışısın": { tr: "Şu anda çevrimdışısın", en: "You are offline", el: "Βρίσκεσαι εκτός σύνδεσης" },
+  "Bağlantı geri geldiğinde canlı piyasa ve hava verileri otomatik olarak yenilenecek.": { tr: "Bağlantı geri geldiğinde canlı piyasa ve hava verileri otomatik olarak yenilenecek.", en: "Live market and weather data will refresh automatically when your connection returns.", el: "Τα ζωντανά δεδομένα αγοράς και καιρού θα ανανεωθούν αυτόματα όταν επανέλθει η σύνδεση." },
+  "Bulut hesabı ve senkronizasyon": { tr: "Bulut hesabı ve senkronizasyon", en: "Cloud account and sync", el: "Λογαριασμός cloud και συγχρονισμός" },
+  "Supabase kurulumu tamamlanınca aktif olur": { tr: "Supabase kurulumu tamamlanınca aktif olur", en: "Available after Supabase setup is complete", el: "Ενεργοποιείται μόλις ολοκληρωθεί η ρύθμιση του Supabase" },
+  "Bağlantı kontrol ediliyor": { tr: "Bağlantı kontrol ediliyor", en: "Checking connection", el: "Έλεγχος σύνδεσης" },
+  "Supabase anahtarları Vercel’e eklenince Google giriş sistemi otomatik aktif olur. Kurulum adımları ZIP içindeki": { tr: "Supabase anahtarları Vercel’e eklenince Google giriş sistemi otomatik aktif olur. Kurulum adımları ZIP içindeki", en: "Google sign-in is enabled automatically after the Supabase keys are added to Vercel. Setup steps are in", el: "Η σύνδεση με Google ενεργοποιείται αυτόματα μόλις προστεθούν τα κλειδιά Supabase στο Vercel. Τα βήματα εγκατάστασης βρίσκονται στο" },
+  "KURULUM.md": { tr: "KURULUM.md", en: "KURULUM.md", el: "KURULUM.md" },
+  "dosyasında hazır.": { tr: "dosyasında hazır.", en: "inside the ZIP.", el: "μέσα στο αρχείο ZIP." },
+  "Bildirim izni verilmedi.": { tr: "Bildirim izni verilmedi.", en: "Notification permission was not granted.", el: "Δεν δόθηκε άδεια για ειδοποιήσεις." },
+  "VAPID anahtarları henüz Vercel’e eklenmemiş.": { tr: "VAPID anahtarları henüz Vercel’e eklenmemiş.", en: "The VAPID keys have not been added to Vercel yet.", el: "Τα κλειδιά VAPID δεν έχουν προστεθεί ακόμη στο Vercel." },
+  "Bildirim kaydedilemedi.": { tr: "Bildirim kaydedilemedi.", en: "The notification subscription could not be saved.", el: "Δεν ήταν δυνατή η αποθήκευση της εγγραφής ειδοποιήσεων." },
+  "Bildirim açılamadı.": { tr: "Bildirim açılamadı.", en: "Notifications could not be enabled.", el: "Δεν ήταν δυνατή η ενεργοποίηση των ειδοποιήσεων." },
+  "Uygulama olarak yükle": { tr: "Uygulama olarak yükle", en: "Install as an app", el: "Εγκατάσταση ως εφαρμογή" },
+  "Coin detayı yüklenemedi.": { tr: "Coin detayı yüklenemedi.", en: "Crypto details could not be loaded.", el: "Δεν ήταν δυνατή η φόρτωση των λεπτομερειών του κρυπτονομίσματος." },
+  "Döviz detayı yüklenemedi.": { tr: "Döviz detayı yüklenemedi.", en: "Currency details could not be loaded.", el: "Δεν ήταν δυνατή η φόρτωση των λεπτομερειών του νομίσματος." },
+  "Favorilerden kaldır": { tr: "Favorilerden kaldır", en: "Remove from favorites", el: "Αφαίρεση από τα αγαπημένα" },
+  "24s hacim": { tr: "24s hacim", en: "24h volume", el: "Όγκος 24ώρου" },
+  "Haberler yüklenemedi.": { tr: "Haberler yüklenemedi.", en: "News could not be loaded.", el: "Δεν ήταν δυνατή η φόρτωση των ειδήσεων." },
+  "Orta": { tr: "Orta", en: "Medium", el: "Μέτρια" },
+  "Google hesabı bağlanıyor...": { tr: "Google hesabı bağlanıyor...", en: "Connecting your Google account...", el: "Σύνδεση του λογαριασμού Google..." },
+  "Giriş bilgisi alınamadı. Lütfen tekrar deneyin.": { tr: "Giriş bilgisi alınamadı. Lütfen tekrar deneyin.", en: "Sign-in information could not be received. Please try again.", el: "Δεν ήταν δυνατή η λήψη των στοιχείων σύνδεσης. Δοκίμασε ξανά." },
+  "Hesap doğrulanamadı. Lütfen tekrar giriş yapın.": { tr: "Hesap doğrulanamadı. Lütfen tekrar giriş yapın.", en: "The account could not be verified. Please sign in again.", el: "Δεν ήταν δυνατή η επαλήθευση του λογαριασμού. Συνδέσου ξανά." },
+  "Cloud sync failed.": { tr: "Bulut senkronizasyonu başarısız oldu.", en: "Cloud sync failed.", el: "Ο συγχρονισμός με το cloud απέτυχε." },
+  "Cloud sign-in expired.": { tr: "Bulut oturumunun süresi doldu.", en: "Cloud sign-in expired.", el: "Η σύνδεση στο cloud έληξε." },
+  "Cloud session could not be verified.": { tr: "Bulut oturumu doğrulanamadı.", en: "Cloud session could not be verified.", el: "Δεν ήταν δυνατή η επαλήθευση της συνεδρίας cloud." },
+  "Cloud session could not be refreshed.": { tr: "Bulut oturumu yenilenemedi.", en: "Cloud session could not be refreshed.", el: "Δεν ήταν δυνατή η ανανέωση της συνεδρίας cloud." },
+  "Cloud data could not be downloaded.": { tr: "Bulut verileri indirilemedi.", en: "Cloud data could not be downloaded.", el: "Δεν ήταν δυνατή η λήψη των δεδομένων cloud." },
+  "Cloud data could not be saved.": { tr: "Bulut verileri kaydedilemedi.", en: "Cloud data could not be saved.", el: "Δεν ήταν δυνατή η αποθήκευση των δεδομένων cloud." },
+  "ABD makro veri akışı": { tr: "ABD makro veri akışı", en: "US macroeconomic data releases", el: "Μακροοικονομικές ανακοινώσεις των ΗΠΑ" },
+  "Avrupa ekonomik veri akışı": { tr: "Avrupa ekonomik veri akışı", en: "European economic data releases", el: "Οικονομικές ανακοινώσεις της Ευρώπης" },
+  "Türkiye piyasa gündemi": { tr: "Türkiye piyasa gündemi", en: "Türkiye market agenda", el: "Ατζέντα αγορών της Τουρκίας" },
+  "Canlı haber servisine geçici olarak ulaşılamıyor": { tr: "Canlı haber servisine geçici olarak ulaşılamıyor", en: "The live news service is temporarily unavailable", el: "Η υπηρεσία ζωντανών ειδήσεων είναι προσωρινά μη διαθέσιμη" },
+  "Arama merkezi": { tr: "Arama merkezi", en: "Search center", el: "Κέντρο αναζήτησης" },
+  "Takip listesi": { tr: "Takip listesi", en: "Watchlist", el: "Λίστα παρακολούθησης" },
+  "Logo efekti": { tr: "Logo efekti", en: "Logo effect", el: "Εφέ λογοτύπου" },
+  "Komut paleti": { tr: "Komut paleti", en: "Command palette", el: "Παλέτα εντολών" },
+  "Hacim:": { tr: "Hacim:", en: "Volume:", el: "Όγκος:" },
+  "Coin bulunamadı.": { tr: "Coin bulunamadı.", en: "Cryptocurrency not found.", el: "Το κρυπτονόμισμα δεν βρέθηκε." },
+  "Döviz geçmiş verileri alınamadı.": { tr: "Döviz geçmiş verileri alınamadı.", en: "Historical exchange-rate data could not be retrieved.", el: "Δεν ήταν δυνατή η λήψη ιστορικών δεδομένων ισοτιμιών." },
+  "Döviz servisine ulaşılamadı.": { tr: "Döviz servisine ulaşılamadı.", en: "The currency service could not be reached.", el: "Δεν ήταν δυνατή η σύνδεση με την υπηρεσία ισοτιμιών." },
+  "Döviz verileri alınamadı.": { tr: "Döviz verileri alınamadı.", en: "Exchange-rate data could not be retrieved.", el: "Δεν ήταν δυνατή η λήψη δεδομένων ισοτιμιών." },
+  "Döviz çevirisi sonucu alınamadı.": { tr: "Döviz çevirisi sonucu alınamadı.", en: "The currency conversion result could not be retrieved.", el: "Δεν ήταν δυνατή η λήψη του αποτελέσματος μετατροπής νομίσματος." },
+  "Döviz çevirisi yapılamadı.": { tr: "Döviz çevirisi yapılamadı.", en: "Currency conversion failed.", el: "Η μετατροπή νομίσματος απέτυχε." },
+  "Şehir adı gerekli.": { tr: "Şehir adı gerekli.", en: "A city name is required.", el: "Απαιτείται όνομα πόλης." },
+  "Bu şehir için doğrulanmış görsel bulunamadı.": { tr: "Bu şehir için doğrulanmış görsel bulunamadı.", en: "No verified image was found for this city.", el: "Δεν βρέθηκε επαληθευμένη εικόνα για αυτή την πόλη." },
+  "Görsel servisine ulaşılamadı.": { tr: "Görsel servisine ulaşılamadı.", en: "The image service could not be reached.", el: "Δεν ήταν δυνατή η σύνδεση με την υπηρεσία εικόνων." },
+  "Şehir araması yapılamadı.": { tr: "Şehir araması yapılamadı.", en: "City search failed.", el: "Η αναζήτηση πόλης απέτυχε." },
+  "Open-Meteo arama servisine ulaşılamadı.": { tr: "Open-Meteo arama servisine ulaşılamadı.", en: "The Open-Meteo search service could not be reached.", el: "Δεν ήταν δυνατή η σύνδεση με την υπηρεσία αναζήτησης Open-Meteo." },
+  "Geçerli koordinat bulunamadı.": { tr: "Geçerli koordinat bulunamadı.", en: "Valid coordinates could not be found.", el: "Δεν βρέθηκαν έγκυρες συντεταγμένες." },
+  "Hava durumu verileri alınamadı.": { tr: "Hava durumu verileri alınamadı.", en: "Weather data could not be retrieved.", el: "Δεν ήταν δυνατή η λήψη δεδομένων καιρού." },
+  "Open-Meteo servisine ulaşılamadı.": { tr: "Open-Meteo servisine ulaşılamadı.", en: "The Open-Meteo service could not be reached.", el: "Δεν ήταν δυνατή η σύνδεση με την υπηρεσία Open-Meteo." },
+  "Google hesabıyla giriş yapmalısınız.": { tr: "Google hesabıyla giriş yapmalısınız.", en: "You must sign in with your Google account.", el: "Πρέπει να συνδεθείς στον λογαριασμό σου Google." },
+  "Geçersiz bildirim aboneliği.": { tr: "Geçersiz bildirim aboneliği.", en: "Invalid notification subscription.", el: "Μη έγκυρη εγγραφή ειδοποιήσεων." },
+  "Bildirim aboneliği kaydedilemedi.": { tr: "Bildirim aboneliği kaydedilemedi.", en: "The notification subscription could not be saved.", el: "Δεν ήταν δυνατή η αποθήκευση της εγγραφής ειδοποιήσεων." },
+  "Oturum gerekli.": { tr: "Oturum gerekli.", en: "A signed-in session is required.", el: "Απαιτείται ενεργή σύνδεση." },
+  "Endpoint gerekli.": { tr: "Endpoint gerekli.", en: "A notification endpoint is required.", el: "Απαιτείται endpoint ειδοποιήσεων." },
+  "US Dollar": { tr: "ABD Doları", en: "US Dollar", el: "Δολάριο ΗΠΑ" },
+  "Euro": { tr: "Euro", en: "Euro", el: "Ευρώ" },
+  "British Pound": { tr: "İngiliz Sterlini", en: "British Pound", el: "Βρετανική Λίρα" },
+  "Japanese Yen": { tr: "Japon Yeni", en: "Japanese Yen", el: "Ιαπωνικό Γιεν" },
+  "Swiss Franc": { tr: "İsviçre Frangı", en: "Swiss Franc", el: "Ελβετικό Φράγκο" },
+  "Turkish Lira": { tr: "Türk Lirası", en: "Turkish Lira", el: "Τουρκική Λίρα" },
+  "Canadian Dollar": { tr: "Kanada Doları", en: "Canadian Dollar", el: "Καναδικό Δολάριο" },
+  "Australian Dollar": { tr: "Avustralya Doları", en: "Australian Dollar", el: "Αυστραλιανό Δολάριο" },
+  "Norwegian Krone": { tr: "Norveç Kronu", en: "Norwegian Krone", el: "Νορβηγική Κορόνα" },
+  "Swedish Krona": { tr: "İsveç Kronu", en: "Swedish Krona", el: "Σουηδική Κορόνα" },
+  "Danish Krone": { tr: "Danimarka Kronu", en: "Danish Krone", el: "Δανική Κορόνα" },
+  "Polish Zloty": { tr: "Polonya Zlotisi", en: "Polish Zloty", el: "Πολωνικό Ζλότι" },
+  "Chinese Yuan": { tr: "Çin Yuanı", en: "Chinese Yuan", el: "Κινεζικό Γουάν" },
+  "Indian Rupee": { tr: "Hindistan Rupisi", en: "Indian Rupee", el: "Ινδική Ρουπία" },
+  "South Korean Won": { tr: "Güney Kore Wonu", en: "South Korean Won", el: "Γουόν Νότιας Κορέας" },
+  "South African Rand": { tr: "Güney Afrika Randı", en: "South African Rand", el: "Ραντ Νότιας Αφρικής" },
+  "Merhaba, ben BorAI. Günlük sohbet, tüm dillerde basit konuşmalar, matematik, fizik, yazılım, piyasa ve hava durumu dahil aklına gelen her konuda soru sorabilirsin.": { tr: "Merhaba, ben BorAI. Günlük sohbet, tüm dillerde basit konuşmalar, matematik, fizik, yazılım, piyasa ve hava durumu dahil aklına gelen her konuda soru sorabilirsin.", en: "Hi, I'm BorAI. Ask me anything, from everyday conversation and simple multilingual chats to math, physics, software, markets and weather.", el: "Γεια σου, είμαι το BorAI. Μπορείς να με ρωτήσεις οτιδήποτε, από καθημερινή συζήτηση και απλές συνομιλίες σε πολλές γλώσσες έως μαθηματικά, φυσική, προγραμματισμό, αγορές και καιρό." },
+  "Şehir": { tr: "Şehir", en: "City", el: "Πόλη" },
+  "Açık ve güneşli": { tr: "Açık ve güneşli", en: "Clear and sunny", el: "Αίθριος και ηλιόλουστος" },
+  "Yağışlı": { tr: "Yağışlı", en: "Rainy", el: "Βροχερός" },
+  "Gök gürültülü": { tr: "Gök gürültülü", en: "Thunderstorms", el: "Με καταιγίδες" },
+  "Değişken hava": { tr: "Değişken hava", en: "Variable weather", el: "Μεταβλητός καιρός" },
+  "Yedek altın verisi": { tr: "Yedek altın verisi", en: "Fallback gold data", el: "Εφεδρικά δεδομένα χρυσού" },
   "önde": { tr: "önde", en: "leads", el: "προηγείται" },
+  "24S": { tr: "24S", en: "24H", el: "24ω" },
+  "7G": { tr: "7G", en: "7D", el: "7η" },
+  "1A": { tr: "1A", en: "1M", el: "1μ" },
+  "3A": { tr: "3A", en: "3M", el: "3μ" },
+  "1Y": { tr: "1Y", en: "1Y", el: "1έ" },
 };
 
 Object.assign(T, EXTRA_T);
@@ -466,8 +599,8 @@ function normalizeLocale(value) {
 
 function localeFromBrowser() {
   if (typeof window === "undefined") return "tr";
-  const urlLocale = new URL(window.location.href).searchParams.get("lang");
-  if (VALID_LOCALES.has(urlLocale)) return urlLocale;
+  const pathLocale = window.location.pathname.split("/").filter(Boolean)[0];
+  if (VALID_LOCALES.has(pathLocale)) return pathLocale;
 
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -494,6 +627,28 @@ function translateTextValue(source, locale) {
 
   const direct = T[key]?.[locale];
   if (direct) return `${leading}${direct}${trailing}`;
+
+  const aboutMatch = key.match(/^(.+)\s+hakkında$/i);
+  if (aboutMatch) {
+    const item = aboutMatch[1];
+    const translated = locale === "en"
+      ? `About ${item}`
+      : locale === "el"
+        ? `Σχετικά με το ${item}`
+        : `${item} hakkında`;
+    return `${leading}${translated}${trailing}`;
+  }
+
+  const currencyValueMatch = key.match(/^1\s+([A-Z]{3})\s+değerinin farklı para birimlerindeki güncel karşılığı\.$/);
+  if (currencyValueMatch) {
+    const code = currencyValueMatch[1];
+    const translated = locale === "en"
+      ? `Current value of 1 ${code} in different currencies.`
+      : locale === "el"
+        ? `Η τρέχουσα αξία 1 ${code} σε διαφορετικά νομίσματα.`
+        : `1 ${code} değerinin farklı para birimlerindeki güncel karşılığı.`;
+    return `${leading}${translated}${trailing}`;
+  }
 
   const positionMatch = key.match(/^(\d+)\s+pozisyon$/i);
   if (positionMatch) {
@@ -748,14 +903,23 @@ function localizeInternalLinks(locale) {
       continue;
     }
     if (url.origin !== window.location.origin || url.pathname.startsWith("/api/")) continue;
-    if (locale === "tr") url.searchParams.delete("lang");
-    else url.searchParams.set("lang", locale);
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (VALID_LOCALES.has(parts[0])) parts.shift();
+    const cleanPath = `/${parts.join("/")}`;
+    url.pathname = cleanPath === "/" ? `/${locale}` : `/${locale}${cleanPath}`;
+    url.searchParams.delete("lang");
     anchor.setAttribute("href", `${url.pathname}${url.search}${url.hash}`);
   }
 }
 
 function updateMetadata(locale) {
-  const path = window.location.pathname.replace(/\/$/, "") || "/";
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  if (VALID_LOCALES.has(parts[0])) parts.shift();
+  const path = (`/${parts.join("/")}`).replace(/\/$/, "") || "/";
+  if (path.startsWith("/coins/") || path.startsWith("/currency/")) {
+    document.documentElement.lang = LOCALES[locale].htmlLang;
+    return;
+  }
   const meta = PAGE_META[path] || PAGE_META["/"];
   const [title, description] = meta[locale];
 
@@ -778,7 +942,9 @@ function updateMetadata(locale) {
 
 function persistLocale(locale) {
   try {
+    const changed = window.localStorage.getItem(STORAGE_KEY) !== locale;
     window.localStorage.setItem(STORAGE_KEY, locale);
+    if (changed) window.dispatchEvent(new Event("boranthegreat:language-updated"));
   } catch {
     // Keep the language switcher functional even when storage is blocked.
   }
@@ -787,15 +953,11 @@ function persistLocale(locale) {
   } catch {
     // Cookie access may also be blocked by the browser.
   }
-
-  const url = new URL(window.location.href);
-  if (locale === "tr") url.searchParams.delete("lang");
-  else url.searchParams.set("lang", locale);
-  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
 export default function BtgLanguageSystem() {
   const pathname = usePathname();
+  const router = useRouter();
   const [locale, setLocale] = useState("tr");
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
@@ -805,7 +967,7 @@ export default function BtgLanguageSystem() {
     const initial = normalizeLocale(localeFromBrowser());
     setLocale(initial);
     setReady(true);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!ready || typeof document === "undefined") return undefined;
@@ -839,7 +1001,7 @@ export default function BtgLanguageSystem() {
     });
 
     const onPopState = () => {
-      const next = new URL(window.location.href).searchParams.get("lang");
+      const next = window.location.pathname.split("/").filter(Boolean)[0];
       setLocale(VALID_LOCALES.has(next) ? next : "tr");
     };
     window.addEventListener("popstate", onPopState);
@@ -850,6 +1012,30 @@ export default function BtgLanguageSystem() {
       window.removeEventListener("popstate", onPopState);
     };
   }, [locale, ready, pathname]);
+
+  useEffect(() => {
+    const applyStoredLanguage = () => {
+      let stored;
+      try {
+        stored = window.localStorage.getItem(STORAGE_KEY);
+      } catch {
+        return;
+      }
+      if (!VALID_LOCALES.has(stored) || stored === locale) return;
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      if (VALID_LOCALES.has(parts[0])) parts.shift();
+      const cleanPath = `/${parts.join("/")}`;
+      const nextPath = cleanPath === "/" ? `/${stored}` : `/${stored}${cleanPath}`;
+      setLocale(stored);
+      router.replace(`${nextPath}${window.location.search}${window.location.hash}`);
+    };
+    window.addEventListener("storage", applyStoredLanguage);
+    window.addEventListener("boranthegreat:language-updated", applyStoredLanguage);
+    return () => {
+      window.removeEventListener("storage", applyStoredLanguage);
+      window.removeEventListener("boranthegreat:language-updated", applyStoredLanguage);
+    };
+  }, [locale, router]);
 
   useEffect(() => {
     const close = (event) => {
@@ -960,8 +1146,13 @@ export default function BtgLanguageSystem() {
               data-active={locale === code}
               className="btg-language-option"
               onClick={() => {
+                const parts = window.location.pathname.split("/").filter(Boolean);
+                if (VALID_LOCALES.has(parts[0])) parts.shift();
+                const cleanPath = `/${parts.join("/")}`;
+                const nextPath = cleanPath === "/" ? `/${code}` : `/${code}${cleanPath}`;
                 setLocale(code);
                 setOpen(false);
+                router.push(`${nextPath}${window.location.search}${window.location.hash}`);
               }}
             >
               <span aria-hidden="true">{item.flag}</span>

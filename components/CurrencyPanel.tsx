@@ -118,6 +118,7 @@ export function CurrencyPanel({ compact = false }: { compact?: boolean }) {
             value={currency.code === "USD" ? "Baz 1,00" : formatRate(currency.rate)}
             detail={currency.name}
             onClick={() => setSelectedCurrency(currency)}
+            href={`/currency/${currency.code.toLowerCase()}`}
             isFavorite={isFavorite(`currency:${currency.code}`)}
             onFavorite={() =>
               toggleFavorite({
