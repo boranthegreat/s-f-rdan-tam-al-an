@@ -1,0 +1,81 @@
+name: Apply BoranTheGreat complete upgrade V2
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/apply-complete-site-upgrade-v2.yml"
+      - "scripts/apply-complete-site-upgrade-v2.mjs"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boranthegreat-complete-upgrade-v2
+  cancel-in-progress: false
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create optional restore tag
+        shell: bash
+        run: |
+          TAG="backup-before-complete-upgrade-v2-${GITHUB_RUN_ID}"
+          git tag "$TAG" || true
+          git push origin "$TAG" || true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Apply complete upgrade V2
+        run: node scripts/apply-complete-site-upgrade-v2.mjs
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            npm install --global pnpm@9
+            pnpm install --frozen-lockfile
+          elif [ -f package-lock.json ]; then
+            npm ci --legacy-peer-deps --no-audit --no-fund
+          else
+            npm install --legacy-peer-deps --no-audit --no-fund
+          fi
+
+      - name: Run lint
+        shell: bash
+        run: |
+          if [ -f pnpm-lock.yaml ]; then pnpm run lint; else npm run lint; fi
+
+      - name: Run production build
+        shell: bash
+        env:
+          NEXT_PUBLIC_APP_NAME: BoranTheGreat
+          NEXT_PUBLIC_SITE_URL: https://boranthegreat.xyz
+        run: |
+          if [ -f pnpm-lock.yaml ]; then pnpm run build; else npm run build; fi
+
+      - name: Commit verified changes
+        shell: bash
+        run: |
+          git add -A -- app components COMPLETE_UPGRADE_REPORT.md
+          if [ -f styles/globals.css ]; then git add styles/globals.css; fi
+          if git diff --cached --quiet; then
+            echo "No new changes to commit. Upgrade V2 is already applied."
+            exit 0
+          fi
+          git commit -m "Add complete BoranTheGreat product upgrade V2"
+          git push
