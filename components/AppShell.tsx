@@ -1,8 +1,8 @@
 import Link from "next/link";
 import BtgLanguageSystem from "@/components/BtgLanguageSystem";
+
 import { AIAssistantWidget } from "@/components/AIAssistantWidget";
 import { AuthMenu } from "@/components/AuthMenu";
-import { AutoSlitherStage } from "@/components/AutoSlitherStage";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CursorEffects } from "@/components/CursorEffects";
 import { FloatingTips } from "@/components/FloatingTips";
@@ -45,7 +45,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </Link>
-
             <div className="flex flex-col gap-3 xl:items-end">
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <PwaInstallButton />
@@ -56,16 +55,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Navigation />
             </div>
           </div>
-
-          <AutoSlitherStage />
         </div>
       </header>
-
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       <FloatingTips />
       <CommandPalette />
       <AIAssistantWidget />
-
       <footer className="mx-auto max-w-7xl px-4 pb-8 text-xs text-slate-500 sm:px-6 lg:px-8">
         <div className="glass-card flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
           <span>Finansal veriler bilgilendirme amaçlıdır. Yatırım tavsiyesi değildir.</span>
