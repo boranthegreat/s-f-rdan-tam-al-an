@@ -1,0 +1,72 @@
+name: Emergency restore site and remove worm
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/emergency-restore-site.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Revert broken premium refresh
+        shell: bash
+        run: |
+          if grep -q "BtgPremiumRefresh" app/layout.tsx 2>/dev/null || [ -f components/BtgPremiumRefresh.tsx ]; then
+            git revert --no-edit 1ae516e1c1fc939fc15e5c3959303832078e4d44
+          else
+            echo "Premium refresh is already reverted."
+          fi
+
+      - name: Remove entrance worm safely
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("components/AppShell.tsx")
+          text = path.read_text(encoding="utf-8")
+
+          text = text.replace(
+              'import { AutoSlitherStage } from "@/components/AutoSlitherStage";\n',
+              ''
+          )
+          text = text.replace(
+              '      <AutoSlitherStage />\n',
+              ''
+          )
+          text = text.replace(
+              '<AutoSlitherStage />\n',
+              ''
+          )
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit safe worm removal
+        shell: bash
+        run: |
+          git add components/AppShell.tsx
+          if ! git diff --cached --quiet; then
+            git commit -m "Remove entrance worm safely"
+          else
+            echo "Entrance worm was already removed."
+          fi
+
+      - name: Push repaired site
+        run: git push
