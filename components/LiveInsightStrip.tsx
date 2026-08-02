@@ -4,8 +4,8 @@ import { Activity, Clock3, RadioTower, ShieldCheck, Sparkles } from "lucide-reac
 import { useEffect, useState } from "react";
 
 const items = [
-  { label: "Canli veri izleme", value: "Aktif", icon: RadioTower },
-  { label: "BorAI", value: "Hazir", icon: Sparkles },
+  { label: "Canlı piyasa takibi", value: "Aktif", icon: RadioTower },
+  { label: "BorAI", value: "Hazır", icon: Sparkles },
   { label: "Favoriler", value: "LocalStorage", icon: ShieldCheck },
   { label: "Piyasa radarı", value: "Döviz + Coin + Altın", icon: Activity }
 ];

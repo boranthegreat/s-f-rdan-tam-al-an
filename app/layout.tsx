@@ -6,6 +6,9 @@ import { CloudSyncProvider } from "@/components/CloudSyncProvider";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { isLocale, localizedPath, type Locale } from "@/lib/i18n";
 
+import BtgPremiumRefresh from "@/components/BtgPremiumRefresh";
+
+import "./btg-premium-refresh.css";
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://boranthegreat.xyz").replace(/\/$/, "");
 
 const descriptions: Record<Locale, string> = {
@@ -110,6 +113,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <ServiceWorkerRegistrar />
           <AppShell>{children}</AppShell>
         </CloudSyncProvider>
+        <BtgPremiumRefresh />
       </body>
     </html>
   );
