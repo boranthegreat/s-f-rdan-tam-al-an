@@ -1,17 +1,20 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Banknote, Calculator, CreditCard, Landmark, PiggyBank, Scale, TrendingUp } from "lucide-react";
 import { getLocaleFromPath, type BtgLocale } from "@/components/enhancements/locale";
 
 type ToolKey = "deposit" | "compound" | "goal" | "fx" | "inflation" | "card" | "gold";
+type DisplayCurrency = "TRY" | "USD" | "EUR";
 
 const translations = {
   tr: {
     title: "Finans Hesaplama Merkezi",
-    description: "Mevduat, bileşik getiri, birikim hedefi, kur kârı, enflasyon ve kart faizini tek yerde yaklaşık olarak hesapla.",
+    description: "Mevduat, bileşik getiri, birikim hedefi, kur kârı, enflasyon ve kart faizini TL, dolar veya euro ile hesapla.",
     disclaimer: "Sonuçlar yaklaşık ve bilgilendirme amaçlıdır. Banka, vergi, fon, kesinti ve yuvarlama kuralları gerçek sonucu değiştirebilir.",
+    currency: "Para birimi",
+    currencyHelp: "Tüm parasal girişler ve sonuçlar seçtiğin para biriminde gösterilir.",
     calculate: "Sonuç",
     principal: "Ana para",
     annualRate: "Yıllık brüt oran (%)",
@@ -50,8 +53,10 @@ const translations = {
   },
   en: {
     title: "Finance Calculator Center",
-    description: "Estimate deposits, compound growth, savings goals, FX profit, inflation and card interest in one place.",
+    description: "Estimate deposits, compound growth, savings goals, FX profit, inflation and card interest in Turkish lira, US dollars or euros.",
     disclaimer: "Results are estimates for information only. Bank, tax, fee and rounding rules can change the actual result.",
+    currency: "Currency",
+    currencyHelp: "All monetary inputs and results use the selected currency.",
     calculate: "Result",
     principal: "Principal",
     annualRate: "Annual gross rate (%)",
@@ -90,8 +95,10 @@ const translations = {
   },
   el: {
     title: "Κέντρο οικονομικών υπολογισμών",
-    description: "Υπολόγισε κατά προσέγγιση καταθέσεις, σύνθετη απόδοση, στόχους αποταμίευσης, κέρδος συναλλάγματος, πληθωρισμό και τόκους κάρτας.",
+    description: "Υπολόγισε καταθέσεις, σύνθετη απόδοση, στόχους αποταμίευσης, κέρδος συναλλάγματος, πληθωρισμό και τόκους κάρτας σε λίρες, δολάρια ή ευρώ.",
     disclaimer: "Τα αποτελέσματα είναι ενδεικτικά. Τραπεζικοί, φορολογικοί και λοιποί κανόνες μπορεί να αλλάξουν το πραγματικό αποτέλεσμα.",
+    currency: "Νόμισμα",
+    currencyHelp: "Όλα τα χρηματικά πεδία και αποτελέσματα εμφανίζονται στο επιλεγμένο νόμισμα.",
     calculate: "Αποτέλεσμα",
     principal: "Αρχικό κεφάλαιο",
     annualRate: "Ετήσιο μικτό επιτόκιο (%)",
@@ -130,21 +137,56 @@ const translations = {
   }
 } as const;
 
+const currencyOptions: Array<{ code: DisplayCurrency; symbol: string; label: string }> = [
+  { code: "TRY", symbol: "₺", label: "Türk lirası" },
+  { code: "USD", symbol: "$", label: "US dollar" },
+  { code: "EUR", symbol: "€", label: "Euro" }
+];
+
+function defaultCurrencyForLocale(locale: BtgLocale): DisplayCurrency {
+  if (locale === "tr") return "TRY";
+  if (locale === "el") return "EUR";
+  return "USD";
+}
+
 function useNumericState(initial: number) {
   const [value, setValue] = useState(initial);
   return [value, (raw: string) => setValue(Number.isFinite(Number(raw)) ? Number(raw) : 0)] as const;
 }
 
-function money(value: number, locale: BtgLocale, currency = "TRY") {
+function money(value: number, locale: BtgLocale, currency: DisplayCurrency) {
   const localeCode = locale === "tr" ? "tr-TR" : locale === "el" ? "el-GR" : "en-US";
-  return new Intl.NumberFormat(localeCode, { style: "currency", currency, maximumFractionDigits: 2 }).format(Number.isFinite(value) ? value : 0);
+  return new Intl.NumberFormat(localeCode, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2
+  }).format(Number.isFinite(value) ? value : 0);
 }
 
-function Field({ label, value, onChange, min = 0, step = "any" }: { label: string; value: number; onChange: (value: string) => void; min?: number; step?: string }) {
+function Field({
+  label,
+  value,
+  onChange,
+  min = 0,
+  step = "any"
+}: {
+  label: string;
+  value: number;
+  onChange: (value: string) => void;
+  min?: number;
+  step?: string;
+}) {
   return (
     <label className="block text-sm font-semibold text-slate-300">
       {label}
-      <input type="number" min={min} step={step} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/90 px-3 py-3 text-white outline-none transition focus:border-mint/60" />
+      <input
+        type="number"
+        min={min}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/90 px-3 py-3 text-white outline-none transition focus:border-mint/60"
+      />
     </label>
   );
 }
@@ -162,8 +204,9 @@ export function FinanceCalculatorHub() {
   const pathname = usePathname();
   const locale = getLocaleFromPath(pathname);
   const t = translations[locale];
+  const preferredCurrency = defaultCurrencyForLocale(locale);
+  const [currency, setCurrency] = useState<DisplayCurrency>(preferredCurrency);
   const [active, setActive] = useState<ToolKey>("deposit");
-
   const [principal, setPrincipal] = useNumericState(150000);
   const [annualRate, setAnnualRate] = useNumericState(40);
   const [days, setDays] = useNumericState(30);
@@ -181,6 +224,12 @@ export function FinanceCalculatorHub() {
   const [monthlyRate, setMonthlyRate] = useNumericState(4.25);
   const [grams, setGrams] = useNumericState(10);
 
+  useEffect(() => {
+    setCurrency(preferredCurrency);
+  }, [preferredCurrency]);
+
+  const amountLabel = (label: string) => `${label} (${currency})`;
+
   const deposit = useMemo(() => {
     const gross = principal * (annualRate / 100) * (days / 365);
     const net = gross * (1 - withholding / 100);
@@ -193,7 +242,10 @@ export function FinanceCalculatorHub() {
     for (let month = 0; month < Math.max(0, Math.floor(months)); month += 1) {
       total = total * (1 + monthly) + monthlyContribution;
     }
-    return { total, gain: total - principal - monthlyContribution * Math.max(0, Math.floor(months)) };
+    return {
+      total,
+      gain: total - principal - monthlyContribution * Math.max(0, Math.floor(months))
+    };
   }, [annualRate, monthlyContribution, months, principal]);
 
   const goalMonths = useMemo(() => {
@@ -228,84 +280,161 @@ export function FinanceCalculatorHub() {
 
   return (
     <section className="rounded-3xl border border-white/10 bg-slate-950/45 p-5 shadow-card sm:p-7">
-      <div className="max-w-3xl">
-        <h2 className="text-2xl font-black text-white sm:text-3xl">{t.title}</h2>
-        <p className="mt-2 text-sm leading-7 text-slate-400">{t.description}</p>
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-3xl">
+          <h2 className="text-2xl font-black text-white sm:text-3xl">{t.title}</h2>
+          <p className="mt-2 text-sm leading-7 text-slate-400">{t.description}</p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 lg:min-w-[310px]">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{t.currency}</p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {currencyOptions.map((option) => (
+              <button
+                key={option.code}
+                type="button"
+                title={option.label}
+                aria-pressed={currency === option.code}
+                onClick={() => setCurrency(option.code)}
+                className={`rounded-xl border px-3 py-2 text-sm font-black transition ${
+                  currency === option.code
+                    ? "border-mint/50 bg-mint/15 text-mint"
+                    : "border-white/10 bg-slate-950/60 text-slate-300 hover:border-white/20 hover:text-white"
+                }`}
+              >
+                {option.symbol} {option.code}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs leading-5 text-slate-500">{t.currencyHelp}</p>
+        </div>
       </div>
+
       <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
         {tools.map(({ key, label, icon: Icon }) => (
-          <button key={key} type="button" onClick={() => setActive(key)} className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${active === key ? "border-mint/40 bg-mint/15 text-mint" : "border-white/10 bg-white/5 text-slate-400 hover:text-white"}`}>
-            <Icon className="h-4 w-4" />{label}
+          <button
+            key={key}
+            type="button"
+            onClick={() => setActive(key)}
+            className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
+              active === key
+                ? "border-mint/40 bg-mint/15 text-mint"
+                : "border-white/10 bg-white/5 text-slate-400 hover:text-white"
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
           </button>
         ))}
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_0.8fr]">
         <div className="grid gap-4 sm:grid-cols-2">
-          {active === "deposit" ? <>
-            <Field label={t.principal} value={principal} onChange={setPrincipal} />
-            <Field label={t.annualRate} value={annualRate} onChange={setAnnualRate} />
-            <Field label={t.days} value={days} onChange={setDays} step="1" />
-            <Field label={t.withholding} value={withholding} onChange={setWithholding} />
-          </> : null}
-          {active === "compound" ? <>
-            <Field label={t.principal} value={principal} onChange={setPrincipal} />
-            <Field label={t.annualRate} value={annualRate} onChange={setAnnualRate} />
-            <Field label={t.months} value={months} onChange={setMonths} step="1" />
-            <Field label={t.monthlyContribution} value={monthlyContribution} onChange={setMonthlyContribution} />
-          </> : null}
-          {active === "goal" ? <>
-            <Field label={t.principal} value={principal} onChange={setPrincipal} />
-            <Field label={t.target} value={target} onChange={setTarget} />
-            <Field label={t.monthlyContribution} value={monthlyContribution} onChange={setMonthlyContribution} />
-            <Field label={t.annualRate} value={annualRate} onChange={setAnnualRate} />
-          </> : null}
-          {active === "fx" ? <>
-            <Field label={t.buyRate} value={buyRate} onChange={setBuyRate} />
-            <Field label={t.sellRate} value={sellRate} onChange={setSellRate} />
-            <Field label={t.quantity} value={quantity} onChange={setQuantity} />
-          </> : null}
-          {active === "inflation" ? <>
-            <Field label={t.futureValue} value={futureValue} onChange={setFutureValue} />
-            <Field label={t.inflation} value={inflation} onChange={setInflation} />
-            <Field label={t.years} value={years} onChange={setYears} />
-          </> : null}
-          {active === "card" ? <>
-            <Field label={t.balance} value={balance} onChange={setBalance} />
-            <Field label={t.monthlyRate} value={monthlyRate} onChange={setMonthlyRate} />
-          </> : null}
-          {active === "gold" ? <>
-            <Field label={t.grams} value={grams} onChange={setGrams} />
-            <Field label={t.buyRate} value={buyRate} onChange={setBuyRate} />
-            <Field label={t.sellRate} value={sellRate} onChange={setSellRate} />
-          </> : null}
+          {active === "deposit" ? (
+            <>
+              <Field label={amountLabel(t.principal)} value={principal} onChange={setPrincipal} />
+              <Field label={t.annualRate} value={annualRate} onChange={setAnnualRate} />
+              <Field label={t.days} value={days} onChange={setDays} step="1" />
+              <Field label={t.withholding} value={withholding} onChange={setWithholding} />
+            </>
+          ) : null}
+
+          {active === "compound" ? (
+            <>
+              <Field label={amountLabel(t.principal)} value={principal} onChange={setPrincipal} />
+              <Field label={t.annualRate} value={annualRate} onChange={setAnnualRate} />
+              <Field label={t.months} value={months} onChange={setMonths} step="1" />
+              <Field label={amountLabel(t.monthlyContribution)} value={monthlyContribution} onChange={setMonthlyContribution} />
+            </>
+          ) : null}
+
+          {active === "goal" ? (
+            <>
+              <Field label={amountLabel(t.principal)} value={principal} onChange={setPrincipal} />
+              <Field label={amountLabel(t.target)} value={target} onChange={setTarget} />
+              <Field label={amountLabel(t.monthlyContribution)} value={monthlyContribution} onChange={setMonthlyContribution} />
+              <Field label={t.annualRate} value={annualRate} onChange={setAnnualRate} />
+            </>
+          ) : null}
+
+          {active === "fx" ? (
+            <>
+              <Field label={amountLabel(t.buyRate)} value={buyRate} onChange={setBuyRate} />
+              <Field label={amountLabel(t.sellRate)} value={sellRate} onChange={setSellRate} />
+              <Field label={t.quantity} value={quantity} onChange={setQuantity} />
+            </>
+          ) : null}
+
+          {active === "inflation" ? (
+            <>
+              <Field label={amountLabel(t.futureValue)} value={futureValue} onChange={setFutureValue} />
+              <Field label={t.inflation} value={inflation} onChange={setInflation} />
+              <Field label={t.years} value={years} onChange={setYears} />
+            </>
+          ) : null}
+
+          {active === "card" ? (
+            <>
+              <Field label={amountLabel(t.balance)} value={balance} onChange={setBalance} />
+              <Field label={t.monthlyRate} value={monthlyRate} onChange={setMonthlyRate} />
+            </>
+          ) : null}
+
+          {active === "gold" ? (
+            <>
+              <Field label={t.grams} value={grams} onChange={setGrams} />
+              <Field label={amountLabel(t.buyRate)} value={buyRate} onChange={setBuyRate} />
+              <Field label={amountLabel(t.sellRate)} value={sellRate} onChange={setSellRate} />
+            </>
+          ) : null}
         </div>
 
-        <ResultBox title={t.calculate}>
-          {active === "deposit" ? <>
-            <p className="flex justify-between gap-4"><span>{t.gross}</span><strong className="text-white">{money(deposit.gross, locale)}</strong></p>
-            <p className="flex justify-between gap-4"><span>{t.net}</span><strong className="text-emerald-300">{money(deposit.net, locale)}</strong></p>
-            <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.final}</span><strong className="text-white">{money(deposit.final, locale)}</strong></p>
-          </> : null}
-          {active === "compound" ? <>
-            <p className="flex justify-between gap-4"><span>{t.net}</span><strong className="text-emerald-300">{money(compound.gain, locale)}</strong></p>
-            <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.final}</span><strong className="text-white">{money(compound.total, locale)}</strong></p>
-          </> : null}
-          {active === "goal" ? <p className="text-lg font-black text-white">{goalMonths === null ? t.unreachable : `${goalMonths} ${t.monthSuffix}`}</p> : null}
-          {active === "fx" ? <>
-            <p className="flex justify-between gap-4"><span>{t.cost}</span><strong className="text-white">{money(fxCost, locale)}</strong></p>
-            <p className="flex justify-between gap-4"><span>{t.currentValue}</span><strong className="text-white">{money(fxValue, locale)}</strong></p>
-            <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.profit}</span><strong className={fxProfit >= 0 ? "text-emerald-300" : "text-rose-300"}>{money(fxProfit, locale)}</strong></p>
-          </> : null}
-          {active === "inflation" ? <p className="flex justify-between gap-4"><span>{t.realValue}</span><strong className="text-white">{money(purchasingPower, locale)}</strong></p> : null}
-          {active === "card" ? <p className="flex justify-between gap-4"><span>{t.estimatedInterest}</span><strong className="text-rose-300">{money(cardInterest, locale)}</strong></p> : null}
-          {active === "gold" ? <>
-            <p className="flex justify-between gap-4"><span>{t.cost}</span><strong className="text-white">{money(goldCost, locale)}</strong></p>
-            <p className="flex justify-between gap-4"><span>{t.currentValue}</span><strong className="text-white">{money(goldValue, locale)}</strong></p>
-            <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.profit}</span><strong className={goldProfit >= 0 ? "text-emerald-300" : "text-rose-300"}>{money(goldProfit, locale)}</strong></p>
-          </> : null}
+        <ResultBox title={`${t.calculate} · ${currency}`}>
+          {active === "deposit" ? (
+            <>
+              <p className="flex justify-between gap-4"><span>{t.gross}</span><strong className="text-white">{money(deposit.gross, locale, currency)}</strong></p>
+              <p className="flex justify-between gap-4"><span>{t.net}</span><strong className="text-emerald-300">{money(deposit.net, locale, currency)}</strong></p>
+              <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.final}</span><strong className="text-white">{money(deposit.final, locale, currency)}</strong></p>
+            </>
+          ) : null}
+
+          {active === "compound" ? (
+            <>
+              <p className="flex justify-between gap-4"><span>{t.net}</span><strong className="text-emerald-300">{money(compound.gain, locale, currency)}</strong></p>
+              <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.final}</span><strong className="text-white">{money(compound.total, locale, currency)}</strong></p>
+            </>
+          ) : null}
+
+          {active === "goal" ? (
+            <p className="text-lg font-black text-white">{goalMonths === null ? t.unreachable : `${goalMonths} ${t.monthSuffix}`}</p>
+          ) : null}
+
+          {active === "fx" ? (
+            <>
+              <p className="flex justify-between gap-4"><span>{t.cost}</span><strong className="text-white">{money(fxCost, locale, currency)}</strong></p>
+              <p className="flex justify-between gap-4"><span>{t.currentValue}</span><strong className="text-white">{money(fxValue, locale, currency)}</strong></p>
+              <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.profit}</span><strong className={fxProfit >= 0 ? "text-emerald-300" : "text-rose-300"}>{money(fxProfit, locale, currency)}</strong></p>
+            </>
+          ) : null}
+
+          {active === "inflation" ? (
+            <p className="flex justify-between gap-4"><span>{t.realValue}</span><strong className="text-white">{money(purchasingPower, locale, currency)}</strong></p>
+          ) : null}
+
+          {active === "card" ? (
+            <p className="flex justify-between gap-4"><span>{t.estimatedInterest}</span><strong className="text-rose-300">{money(cardInterest, locale, currency)}</strong></p>
+          ) : null}
+
+          {active === "gold" ? (
+            <>
+              <p className="flex justify-between gap-4"><span>{t.cost}</span><strong className="text-white">{money(goldCost, locale, currency)}</strong></p>
+              <p className="flex justify-between gap-4"><span>{t.currentValue}</span><strong className="text-white">{money(goldValue, locale, currency)}</strong></p>
+              <p className="flex justify-between gap-4 border-t border-white/10 pt-2"><span>{t.profit}</span><strong className={goldProfit >= 0 ? "text-emerald-300" : "text-rose-300"}>{money(goldProfit, locale, currency)}</strong></p>
+            </>
+          ) : null}
         </ResultBox>
       </div>
+
       <p className="mt-5 rounded-xl border border-amber-300/15 bg-amber-300/[0.06] px-4 py-3 text-xs leading-5 text-amber-100/75">{t.disclaimer}</p>
     </section>
   );
