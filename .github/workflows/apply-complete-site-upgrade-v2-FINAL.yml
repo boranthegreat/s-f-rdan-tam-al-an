@@ -1,0 +1,74 @@
+name: Apply BoranTheGreat complete upgrade V2 FINAL
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/apply-complete-site-upgrade-v2-FINAL.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boranthegreat-complete-upgrade-v2-final
+  cancel-in-progress: false
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create restore tag
+        shell: bash
+        run: |
+          TAG="backup-before-complete-upgrade-v2-final-${GITHUB_RUN_ID}"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Verify installer exists
+        shell: bash
+        run: |
+          test -f scripts/apply-complete-site-upgrade-v2.mjs
+
+      - name: Apply complete upgrade V2
+        run: node scripts/apply-complete-site-upgrade-v2.mjs
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          npm install --global pnpm@10.32.0
+          pnpm --version
+          pnpm install --frozen-lockfile
+
+      - name: Run production build
+        shell: bash
+        env:
+          NEXT_PUBLIC_APP_NAME: BoranTheGreat
+          NEXT_PUBLIC_SITE_URL: https://boranthegreat.xyz
+        run: pnpm run build
+
+      - name: Commit build-verified changes
+        shell: bash
+        run: |
+          git add -A -- app components COMPLETE_UPGRADE_REPORT.md
+          if [ -f styles/globals.css ]; then git add styles/globals.css; fi
+          if git diff --cached --quiet; then
+            echo "No new changes to commit. Upgrade V2 is already applied."
+            exit 0
+          fi
+          git commit -m "Add complete BoranTheGreat product upgrade V2"
+          git push
