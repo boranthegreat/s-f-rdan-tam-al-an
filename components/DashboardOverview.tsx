@@ -23,7 +23,7 @@ export function DashboardOverview() {
             <span className="status-pill">Canlı veri hattı</span>
           </div>
           <h1 className="shine-text mt-5 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">
-            Piyasaları tek ekrandan takip et.
+            Küresel piyasalar ve hava radarını tek koyu panelde izle.
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400">
             Döviz kurları, kripto piyasa sinyalleri, altın kuru, 7 günlük dünya hava tahmini ve favori listesi tek
@@ -31,13 +31,13 @@ export function DashboardOverview() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/currency" className="premium-button">
-              Piyasaları aç
+              Döviz takip
             </Link>
             <Link href="/coins" className="premium-link">
-              Takip listemi oluştur
+              Coin panelini aç
             </Link>
             <Link href="/weather" className="premium-link">
-              Hava durumunu gör
+              Hava radarını aç
             </Link>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const commands = [
   { label: "Ana panel", description: "Kontrol merkezine dön", href: "/", icon: Command, tags: "dashboard panel ana" },
-  { label: "Piyasaları aç", description: "Kurlar ve çevirici", href: "/currency", icon: Landmark, tags: "usd eur try doviz kur" },
+  { label: "Döviz takip", description: "Kurlar ve çevirici", href: "/currency", icon: Landmark, tags: "usd eur try doviz kur" },
   { label: "Altın kuru", description: "Gram ve ons altın", href: "/currency", icon: Gem, tags: "gold altin gram ons" },
   { label: "Coin takip", description: "BTC, ETH, SOL, TRX", href: "/coins", icon: Coins, tags: "kripto crypto btc eth trx" },
   { label: "Dünya hava radarı", description: "Başkentler ve şehir arama", href: "/weather", icon: CloudSun, tags: "hava weather city baskent" },
