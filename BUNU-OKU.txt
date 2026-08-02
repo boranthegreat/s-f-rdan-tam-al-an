@@ -1,7 +1,24 @@
-1) ZIP'i Tümünü ayıkla ile aç.
-2) Açılan klasörün içindeki .github ve scripts klasörlerini GitHub Upload files alanına sürükle.
-3) Commit changes'e bas.
-4) GitHub'da Actions sekmesinde "Apply Vercel function-limit fix" işleminin yeşil olmasını bekle.
-5) İşlem otomatik olarak eski API dosyalarını siler, API'leri 4 Vercel Function'a birleştirir ve yeni commit oluşturur.
+BORANTHEGREAT PREMIUM TASARIM GUNCELLEMESI
 
-Hiçbir dosyayı elle silme.
+1) ZIP dosyasina sag tikla ve "Tumunu ayikla"ya bas.
+2) Acilan klasorun icindeki .github ve scripts klasorlerini sec.
+3) GitHub'daki s-f-rdan-tam-al-an projesinde Add file > Upload files bolumune gir.
+4) Yalnizca .github ve scripts klasorlerini yukleme alanina surukle.
+5) Commit changes'e bas.
+6) GitHub'da Actions sekmesini ac.
+7) "Apply BoranTheGreat premium redesign" isleminin YESIL olmasini bekle.
+8) Islem kodu kontrol eder, build basarili olursa degisiklikleri otomatik commit eder.
+9) Vercel yeni commiti otomatik yayinlar.
+
+YAPILANLAR
+- Giristeki solucan/intro animasyonu kaldirilir.
+- Ana ekran sadelestirilir ve teknik metinler gizlenir.
+- Tekrarlanan kartlar kaldirilir.
+- Masaustu menusu sadelestirilir, Daha Fazla menusu eklenir.
+- Mobil alt menu eklenir.
+- Canli piyasa ozeti ve Boran Brief eklenir.
+- Portfoy bos ekrani yonlendirmeli hale gelir.
+- Lacivert + mint premium tasarim uygulanir.
+- Mevcut coklu dil, API, portfoy, alarm, haber ve PWA yapisi korunur.
+
+HICBIR MEVCUT DOSYAYI ELLE SILME.
