@@ -1,0 +1,100 @@
+name: Apply BoranTheGreat complete upgrade V2 REAL FIX
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/apply-complete-site-upgrade-v2-REAL-FIX.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boranthegreat-complete-upgrade-v2-real-fix
+  cancel-in-progress: false
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create restore tag
+        run: |
+          TAG="backup-before-real-fix-${GITHUB_RUN_ID}"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Apply complete upgrade
+        run: node scripts/apply-complete-site-upgrade-v2.mjs
+
+      - name: Fix unsupported Instagram icon
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+
+          const generated = "components/enhancements/StaticInfoPage.tsx";
+          let page = fs.readFileSync(generated, "utf8");
+          page = page.replace(
+            'import { Database, ExternalLink, Instagram, ShieldCheck } from "lucide-react";',
+            'import { Database, ExternalLink, ShieldCheck } from "lucide-react";'
+          );
+          page = page.replace(
+            '<Instagram className="h-4 w-4" />Instagram<ExternalLink className="h-4 w-4" />',
+            'Instagram<ExternalLink className="h-4 w-4" />'
+          );
+          if (page.includes("Instagram className") || page.includes("ExternalLink, Instagram")) {
+            throw new Error("Instagram ikon düzeltmesi uygulanamadı.");
+          }
+          fs.writeFileSync(generated, page, "utf8");
+
+          const installer = "scripts/apply-complete-site-upgrade-v2.mjs";
+          let source = fs.readFileSync(installer, "utf8");
+          source = source.replace(
+            "Database, ExternalLink, Instagram, ShieldCheck",
+            "Database, ExternalLink, ShieldCheck"
+          );
+          source = source.replace(
+            '<Instagram className=\\"h-4 w-4\\" />Instagram<ExternalLink className=\\"h-4 w-4\\" />',
+            'Instagram<ExternalLink className=\\"h-4 w-4\\" />'
+          );
+          fs.writeFileSync(installer, source, "utf8");
+          NODE
+
+      - name: Install dependencies
+        run: |
+          npm install --global pnpm@10.32.0
+          pnpm install --frozen-lockfile
+
+      - name: Run production build
+        env:
+          NEXT_PUBLIC_APP_NAME: BoranTheGreat
+          NEXT_PUBLIC_SITE_URL: https://boranthegreat.xyz
+        run: pnpm run build
+
+      - name: Commit build-verified changes
+        run: |
+          git add -A -- app components scripts/apply-complete-site-upgrade-v2.mjs COMPLETE_UPGRADE_REPORT.md
+          if [ -f styles/globals.css ]; then git add styles/globals.css; fi
+          if [ -f app/globals.css ]; then git add app/globals.css; fi
+          if git diff --cached --quiet; then
+            echo "No new changes to commit."
+            exit 0
+          fi
+          git commit -m "Apply complete site upgrade V2 with build fix"
+          git push
