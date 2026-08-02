@@ -689,3 +689,17 @@ body::after {
       0 18px 48px rgba(2, 6, 23, 0.35);
   }
 }
+
+
+/* BTG_COMPLETE_UPGRADE_V2 */
+html { scroll-behavior: smooth; }
+@media (max-width: 767px) {
+  .btg-desktop-navigation, .btg-desktop-cursor-effects, .cursor-effect, .cursor-trail, .cursor-glow, [data-cursor-effect] { display: none !important; }
+  .btg-header-actions { max-width: 100%; flex-wrap: nowrap !important; justify-content: flex-start !important; overflow-x: auto; padding-bottom: 0.25rem; scrollbar-width: none; }
+  .btg-header-actions::-webkit-scrollbar { display: none; }
+  .btg-header-actions > * { flex: 0 0 auto; }
+  main { padding-bottom: max(7rem, env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
