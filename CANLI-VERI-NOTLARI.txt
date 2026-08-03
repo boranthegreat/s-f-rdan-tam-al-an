@@ -1,0 +1,30 @@
+BORANTHEGREAT — CANLI PIYASA SISTEMI
+
+NE EKLENDI?
+- BTC, ETH, SOL, BNB, XRP ve TRX için Binance WebSocket canlı fiyat akışı.
+- USD/TRY için Binance TRY piyasa akışından canlı yaklaşık değer.
+- Desteklenen EUR, GBP ve AUD çapraz kurları için canlı piyasa akışı.
+- Altın için PAXG/USDT ve Binance TRY çapraz üzerinden canlı yaklaşık ons/gram hesabı.
+- Fiyat yükseldiğinde yeşil, düştüğünde kırmızı 720 ms parlama efekti.
+- Bağlantı koparsa otomatik yeniden bağlanma ve alternatif WebSocket adresleri.
+- Canlı bağlantı yoksa mevcut CoinGecko, CoinLore, Frankfurter ve Yahoo tabanlı veriler yedek olarak korunur.
+- Ana panel, piyasa bandı, döviz, coin, altın, portföy, favoriler, alarmlar ve detay sayfaları aynı canlı veri merkezini kullanır.
+
+ONEMLI
+- Bu sürüm API anahtarı istemez.
+- USDT/TRY, serbest piyasa USD/TRY veya banka/kuyumcu alış-satış kuru ile birebir aynı değildir.
+- PAXG tabanlı gram altın, Harem Altın ya da kuyumcu alış-satış fiyatı değildir; canlı yaklaşık piyasa değeridir.
+- JPY, CHF, CAD, NOK, SEK, DKK, PLN, CNY, INR, KRW ve ZAR gibi Binance canlı paritesi bulunmayan kurlar mevcut yedek API ile güncellenir.
+- Harem Altın ile birebir alış/satış ekranı için lisanslı fiziksel altın ve döviz veri sağlayıcısı gerekir.
+
+YAYINLAMA
+1. Bu klasörün içindeki tüm dosyaları GitHub projenin ana dizinine yükle.
+2. Var olan aynı isimli dosyaların üzerine yazılmasına izin ver.
+3. Vercel bağlıysa yeni commit sonrası otomatik dağıtım başlayacaktır.
+4. Yayın bittikten sonra siteyi Ctrl+F5 ile bir kez sert yenile.
+5. Üst canlı veri bandında “Saniyelik akış aktif” yazısını kontrol et.
+
+KONTROL EDILENLER
+- 135 TypeScript/TSX dosyasındaki yerel import yolları kontrol edildi.
+- 133 TypeScript/TSX dosyası TypeScript dönüştürücüsüyle sözdizimi kontrolünden geçti.
+- Bu çalışma ortamının paket deposu bağımlılıkları indirmediği için tam npm install / next build testi burada çalıştırılamadı.

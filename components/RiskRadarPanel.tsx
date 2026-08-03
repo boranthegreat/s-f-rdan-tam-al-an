@@ -2,32 +2,24 @@
 
 import { AlertTriangle, BarChart3, CloudRain, Gauge, ShieldCheck, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { getCoinMarkets } from "@/lib/api/coins";
-import { getGoldRate } from "@/lib/api/gold";
+import { LivePrice } from "@/components/live-market/LivePrice";
+import { useLiveMarket } from "@/components/live-market/LiveMarketProvider";
 import { getWeatherForecast } from "@/lib/api/weather";
 import { defaultCities } from "@/data/cities";
 import { formatCurrency, formatPercent } from "@/lib/format";
-import type { CoinMarket, GoldRate, WeatherForecast } from "@/types";
+import type { WeatherForecast } from "@/types";
 
 type RiskLevel = "dusuk" | "orta" | "yuksek";
 
 export function RiskRadarPanel() {
-  const [coins, setCoins] = useState<CoinMarket[]>([]);
-  const [gold, setGold] = useState<GoldRate | null>(null);
+  const { coins, gold } = useLiveMarket();
   const [weather, setWeather] = useState<WeatherForecast | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
       try {
-        const [coinData, goldData, weatherData] = await Promise.all([
-          getCoinMarkets(),
-          getGoldRate(),
-          getWeatherForecast(defaultCities[0])
-        ]);
-
-        setCoins(coinData);
-        setGold(goldData);
+        const weatherData = await getWeatherForecast(defaultCities[0]);
         setWeather(weatherData);
         setError("");
       } catch (loadError) {
@@ -115,7 +107,7 @@ export function RiskRadarPanel() {
         <RadarMetric
           icon={ShieldCheck}
           label="Altın sigortası"
-          value={gold ? formatCurrency(gold.gramTry, "TRY") : "Bekleniyor"}
+          value={gold ? <LivePrice marketKey="GOLD_GRAM_TRY" numericValue={gold.gramTry}>{formatCurrency(gold.gramTry, "TRY")}</LivePrice> : "Bekleniyor"}
           detail="Gram altın TRY bazlı"
         />
         <RadarMetric
@@ -139,7 +131,7 @@ function RadarMetric({
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  value: string;
+  value: React.ReactNode;
   detail: string;
   tone?: "up" | "down" | "neutral";
 }) {

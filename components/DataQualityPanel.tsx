@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLiveMarket } from "@/components/live-market/LiveMarketProvider";
 
 type SourceStatus = {
   name: string;
@@ -9,32 +10,40 @@ type SourceStatus = {
 };
 
 export function DataQualityPanel() {
-  const [sources, setSources] = useState<SourceStatus[]>([
-    { name: "Döviz", status: "Kontrol", detail: "Frankfurter API" },
-    { name: "Coin", status: "Kontrol", detail: "CoinGecko / CoinLore" },
-    { name: "Altın", status: "Kontrol", detail: "Yahoo Finance + Frankfurter" },
-    { name: "Hava", status: "Kontrol", detail: "Open-Meteo" }
-  ]);
+  const { hasLivePrice } = useLiveMarket();
+  const [weatherStatus, setWeatherStatus] = useState<SourceStatus["status"]>("Kontrol");
 
   useEffect(() => {
-    async function load() {
-      const [currency, coins, gold, weather] = await Promise.allSettled([
-        fetch("/api/currency/rates?base=USD"),
-        fetch("/api/coins"),
-        fetch("/api/gold"),
-        fetch("/api/weather/forecast?id=745044&name=Istanbul&country=Turkey&latitude=41.0138&longitude=28.9497")
-      ]);
-
-      setSources([
-        statusFromResponse("Döviz", "Frankfurter API", currency),
-        statusFromResponse("Coin", "CoinGecko / CoinLore", coins),
-        statusFromResponse("Altın", "Yahoo Finance + Frankfurter", gold),
-        statusFromResponse("Hava", "Open-Meteo", weather)
-      ]);
-    }
-
-    load().catch(() => undefined);
+    const controller = new AbortController();
+    fetch("/api/weather/forecast?id=745044&name=Istanbul&country=Turkey&latitude=41.0138&longitude=28.9497", {
+      signal: controller.signal
+    })
+      .then((response) => setWeatherStatus(response.ok ? "Canlı" : "Yedek"))
+      .catch(() => setWeatherStatus("Yedek"));
+    return () => controller.abort();
   }, []);
+
+  const sources = useMemo<SourceStatus[]>(
+    () => [
+      {
+        name: "Döviz",
+        status: hasLivePrice("USDTRY") ? "Canlı" : "Yedek",
+        detail: hasLivePrice("USDTRY") ? "Binance TRY piyasa akışı · Frankfurter yedek" : "Frankfurter yedek veri"
+      },
+      {
+        name: "Coin",
+        status: hasLivePrice("BTC") ? "Canlı" : "Yedek",
+        detail: hasLivePrice("BTC") ? "Binance WebSocket · CoinGecko yedek" : "CoinGecko / CoinLore yedek"
+      },
+      {
+        name: "Altın",
+        status: hasLivePrice("GOLD_GRAM_TRY") ? "Canlı" : "Yedek",
+        detail: hasLivePrice("GOLD_GRAM_TRY") ? "PAXG + TRY çapraz akışıyla canlı yaklaşık değer" : "Yahoo Finance + kur yedeği"
+      },
+      { name: "Hava", status: weatherStatus, detail: "Open-Meteo" }
+    ],
+    [hasLivePrice, weatherStatus]
+  );
 
   return (
     <div className="grid gap-4 md:grid-cols-4">
@@ -49,16 +58,4 @@ export function DataQualityPanel() {
       ))}
     </div>
   );
-}
-
-function statusFromResponse(
-  name: string,
-  detail: string,
-  result: PromiseSettledResult<Response>
-): SourceStatus {
-  if (result.status === "fulfilled" && result.value.ok) {
-    return { name, detail, status: "Canlı" };
-  }
-
-  return { name, detail, status: "Yedek" };
 }

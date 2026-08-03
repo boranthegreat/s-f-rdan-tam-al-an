@@ -5,7 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { AreaChartCard } from "@/components/ChartCard";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
-import { convertCurrency, getCurrencyHistory } from "@/lib/api/currency";
+import { LivePrice } from "@/components/live-market/LivePrice";
+import { currencyMarketKey, useLiveMarket } from "@/components/live-market/LiveMarketProvider";
+import { getCurrencyHistory } from "@/lib/api/currency";
 import { formatCurrencyPrecise, formatRate } from "@/lib/format";
 import { useAlerts } from "@/lib/useAlerts";
 import { useFavorites } from "@/lib/useFavorites";
@@ -15,10 +17,10 @@ import type { CurrencyTimePoint } from "@/types";
 const ranges = [{ label: "7G", days: 7 }, { label: "1A", days: 30 }, { label: "3A", days: 90 }, { label: "1Y", days: 365 }] as const;
 
 export function CurrencyDetailPanel({ code, name }: { code: string; name: string }) {
+  const { convert } = useLiveMarket();
   const [targetCurrency, setTargetCurrency] = useState(code === "TRY" ? "USD" : "TRY");
   const [days, setDays] = useState(30);
   const [history, setHistory] = useState<CurrencyTimePoint[]>([]);
-  const [rates, setRates] = useState<Record<string, number>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [target, setTarget] = useState(0);
@@ -26,19 +28,28 @@ export function CurrencyDetailPanel({ code, name }: { code: string; name: string
   const { upsertAsset } = usePortfolio();
   const { addAlert } = useAlerts();
 
+  const rates = useMemo(() => {
+    return Object.fromEntries(
+      ["USD", "TRY", "EUR"].map((currency) => [currency, currency === code ? 1 : (convert(1, code, currency) ?? 0)])
+    ) as Record<string, number>;
+  }, [code, convert]);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      getCurrencyHistory(code, targetCurrency, days),
-      Promise.all(["USD", "TRY", "EUR"].map(async (currency) => [currency, currency === code ? 1 : await convertCurrency(1, code, currency)] as const))
-    ]).then(([historyData, pairs]) => {
-      setHistory(historyData);
-      const nextRates = Object.fromEntries(pairs);
-      setRates(nextRates);
-      setTarget((current) => current > 0 ? current : (nextRates.USD ?? 1));
-      setError("");
-    }).catch((reason) => setError(reason instanceof Error ? reason.message : "Döviz detayı yüklenemedi.")).finally(() => setLoading(false));
+    getCurrencyHistory(code, targetCurrency, days)
+      .then((historyData) => {
+        setHistory(historyData);
+        setError("");
+      })
+      .catch((reason) => setError(reason instanceof Error ? reason.message : "Döviz detayı yüklenemedi."))
+      .finally(() => setLoading(false));
   }, [code, days, targetCurrency]);
+
+  const usdRate = rates.USD ?? 1;
+
+  useEffect(() => {
+    setTarget((current) => current > 0 ? current : usdRate);
+  }, [usdRate]);
 
   const favoriteId = `currency:${code}`;
   const chartData = useMemo(() => history.map((point) => ({ ...point, value: Number(point.value.toFixed(6)) })), [history]);
@@ -53,7 +64,16 @@ export function CurrencyDetailPanel({ code, name }: { code: string; name: string
         <h1 className="mt-2 text-3xl font-black text-white">{name}</h1>
         <p className="mt-2 text-sm text-slate-400">{`1 ${code} değerinin farklı para birimlerindeki güncel karşılığı.`}</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          {(["USD", "TRY", "EUR"] as const).map((currency) => <div key={currency} className="rounded-2xl border border-line bg-white/[0.04] p-4"><p className="text-xs text-slate-500">1 {code} / {currency}</p><p className="mt-2 text-xl font-black text-white">{rates[currency] ? formatCurrencyPrecise(rates[currency], currency) : "N/A"}</p></div>)}
+          {(["USD", "TRY", "EUR"] as const).map((currency) => (
+            <div key={currency} className="rounded-2xl border border-line bg-white/[0.04] p-4">
+              <p className="text-xs text-slate-500">1 {code} / {currency}</p>
+              <p className="mt-2 text-xl font-black text-white">
+                <LivePrice marketKey={currencyMarketKey(code === "USD" ? currency : code)} numericValue={rates[currency]}>
+                  {rates[currency] ? formatCurrencyPrecise(rates[currency], currency) : "N/A"}
+                </LivePrice>
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 

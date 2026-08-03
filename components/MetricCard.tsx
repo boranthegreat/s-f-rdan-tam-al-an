@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/FavoriteButton";
 
@@ -13,8 +14,8 @@ export function MetricCard({
   href
 }: {
   label: string;
-  value: string;
-  detail?: string;
+  value: ReactNode;
+  detail?: ReactNode;
   tone?: "positive" | "negative" | "neutral";
   isFavorite?: boolean;
   onFavorite?: () => void;

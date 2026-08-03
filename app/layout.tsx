@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { CloudSyncProvider } from "@/components/CloudSyncProvider";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { isLocale, localizedPath, type Locale } from "@/lib/i18n";
+import { LiveMarketProvider } from "@/components/live-market/LiveMarketProvider";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://boranthegreat.xyz").replace(/\/$/, "");
 
@@ -107,8 +108,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang={locale}>
       <body className="bg-radial-grid font-sans antialiased">
         <CloudSyncProvider>
-          <ServiceWorkerRegistrar />
-          <AppShell>{children}</AppShell>
+          <LiveMarketProvider>
+            <ServiceWorkerRegistrar />
+            <AppShell>{children}</AppShell>
+          </LiveMarketProvider>
         </CloudSyncProvider>
       </body>
     </html>

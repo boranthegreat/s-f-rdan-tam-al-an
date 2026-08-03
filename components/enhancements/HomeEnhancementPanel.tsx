@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getLocaleFromPath, localizedHref, type BtgLocale } from "@/components/enhancements/locale";
+import { LivePrice } from "@/components/live-market/LivePrice";
+import { useLiveMarket } from "@/components/live-market/LiveMarketProvider";
 
 type CityKey = "mersin" | "istanbul" | "ankara" | "athens" | "new-york";
 type Currency = "TRY" | "USD" | "EUR";
@@ -203,6 +205,7 @@ export function HomeEnhancementPanel() {
   const pathname = usePathname();
   const locale = getLocaleFromPath(pathname);
   const t = copy[locale];
+  const { coins, rates, updatedAt, hasLivePrice } = useLiveMarket();
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
   const [draft, setDraft] = useState<Preferences>(DEFAULT_PREFS);
   const [saved, setSaved] = useState(false);
@@ -244,62 +247,29 @@ export function HomeEnhancementPanel() {
 
   const loadSnapshot = useCallback(async () => {
     setLoading(true);
-    const errors: string[] = [];
     const city = cityOptions[prefs.city];
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 9000);
 
     try {
-      const [fxResult, cryptoResult, weatherResult] = await Promise.allSettled([
-        fetch("https://api.frankfurter.app/latest?from=USD&to=TRY,EUR", { signal: controller.signal }).then((res) => {
-          if (!res.ok) throw new Error("Frankfurter");
-          return res.json() as Promise<{ rates?: { TRY?: number; EUR?: number } }>;
-        }),
-        fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd,try&include_24hr_change=true", { signal: controller.signal }).then((res) => {
-          if (!res.ok) throw new Error("CoinGecko");
-          return res.json() as Promise<Record<string, Record<string, number>>>;
-        }),
-        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code&timezone=auto`, { signal: controller.signal }).then((res) => {
-          if (!res.ok) throw new Error("Open-Meteo");
-          return res.json() as Promise<{ current?: { temperature_2m?: number; weather_code?: number } }>;
-        })
-      ]);
-
-      const next: MarketSnapshot = {
-        usdTry: null,
-        usdEur: null,
-        btcUsd: null,
-        btcTry: null,
-        btcChange: null,
-        ethUsd: null,
-        ethTry: null,
-        ethChange: null,
-        temperature: null,
-        weatherCode: null,
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code&timezone=auto`,
+        { signal: controller.signal }
+      );
+      if (!response.ok) throw new Error("Open-Meteo");
+      const weather = (await response.json()) as { current?: { temperature_2m?: number; weather_code?: number } };
+      setSnapshot((current) => ({
+        ...current,
+        temperature: weather.current?.temperature_2m ?? null,
+        weatherCode: weather.current?.weather_code ?? null,
         updatedAt: new Date().toISOString(),
-        errors
-      };
-
-      if (fxResult.status === "fulfilled") {
-        next.usdTry = fxResult.value.rates?.TRY ?? null;
-        next.usdEur = fxResult.value.rates?.EUR ?? null;
-      } else errors.push("Frankfurter");
-
-      if (cryptoResult.status === "fulfilled") {
-        next.btcUsd = cryptoResult.value.bitcoin?.usd ?? null;
-        next.btcTry = cryptoResult.value.bitcoin?.try ?? null;
-        next.btcChange = cryptoResult.value.bitcoin?.usd_24h_change ?? null;
-        next.ethUsd = cryptoResult.value.ethereum?.usd ?? null;
-        next.ethTry = cryptoResult.value.ethereum?.try ?? null;
-        next.ethChange = cryptoResult.value.ethereum?.usd_24h_change ?? null;
-      } else errors.push("CoinGecko");
-
-      if (weatherResult.status === "fulfilled") {
-        next.temperature = weatherResult.value.current?.temperature_2m ?? null;
-        next.weatherCode = weatherResult.value.current?.weather_code ?? null;
-      } else errors.push("Open-Meteo");
-
-      setSnapshot({ ...next, errors: [...errors] });
+        errors: current.errors.filter((item) => item !== "Open-Meteo")
+      }));
+    } catch {
+      setSnapshot((current) => ({
+        ...current,
+        errors: Array.from(new Set([...current.errors.filter((item) => item !== "Open-Meteo"), "Open-Meteo"]))
+      }));
     } finally {
       window.clearTimeout(timeout);
       setLoading(false);
@@ -310,6 +280,30 @@ export function HomeEnhancementPanel() {
     if (!isHomePath(pathname)) return;
     void loadSnapshot();
   }, [loadSnapshot, pathname]);
+
+  const bitcoin = coins.find((coin) => coin.id === "bitcoin");
+  const ethereum = coins.find((coin) => coin.id === "ethereum");
+  const usdTry = rates.find((rate) => rate.code === "TRY")?.rate ?? null;
+  const usdEur = rates.find((rate) => rate.code === "EUR")?.rate ?? null;
+  const btcUsd = bitcoin?.current_price ?? null;
+  const ethUsd = ethereum?.current_price ?? null;
+  const btcChange = bitcoin?.price_change_percentage_24h ?? null;
+  const ethChange = ethereum?.price_change_percentage_24h ?? null;
+
+  useEffect(() => {
+    setSnapshot((current) => ({
+      ...current,
+      usdTry,
+      usdEur,
+      btcUsd,
+      btcTry: btcUsd !== null && usdTry !== null ? btcUsd * usdTry : null,
+      btcChange,
+      ethUsd,
+      ethTry: ethUsd !== null && usdTry !== null ? ethUsd * usdTry : null,
+      ethChange,
+      updatedAt: updatedAt?.toISOString() ?? current.updatedAt
+    }));
+  }, [btcChange, btcUsd, ethChange, ethUsd, updatedAt, usdEur, usdTry]);
 
   const dailySummary = useMemo(() => {
     const lines: string[] = [];
@@ -358,7 +352,9 @@ export function HomeEnhancementPanel() {
       key: "usdtry" as const,
       title: "USD/TRY",
       value: formatNumber(snapshot.usdTry, locale, { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
-      meta: "Frankfurter",
+      numericValue: snapshot.usdTry,
+      meta: hasLivePrice("USDTRY") ? "Binance TRY canlı piyasa akışı" : "Frankfurter yedek veri",
+      marketKey: "USDTRY",
       icon: Coins,
       change: null as number | null
     },
@@ -366,7 +362,9 @@ export function HomeEnhancementPanel() {
       key: "bitcoin" as const,
       title: "Bitcoin",
       value: cryptoValue(snapshot.btcUsd, snapshot.btcTry),
-      meta: "CoinGecko",
+      numericValue: prefs.currency === "TRY" ? snapshot.btcTry : prefs.currency === "EUR" && snapshot.btcUsd !== null && snapshot.usdEur !== null ? snapshot.btcUsd * snapshot.usdEur : snapshot.btcUsd,
+      meta: hasLivePrice("BTC") ? "Binance WebSocket" : "CoinGecko yedek veri",
+      marketKey: "BTC",
       icon: TrendingUp,
       change: snapshot.btcChange
     },
@@ -374,7 +372,9 @@ export function HomeEnhancementPanel() {
       key: "ethereum" as const,
       title: "Ethereum",
       value: cryptoValue(snapshot.ethUsd, snapshot.ethTry),
-      meta: "CoinGecko",
+      numericValue: prefs.currency === "TRY" ? snapshot.ethTry : prefs.currency === "EUR" && snapshot.ethUsd !== null && snapshot.usdEur !== null ? snapshot.ethUsd * snapshot.usdEur : snapshot.ethUsd,
+      meta: hasLivePrice("ETH") ? "Binance WebSocket" : "CoinGecko yedek veri",
+      marketKey: "ETH",
       icon: WalletCards,
       change: snapshot.ethChange
     },
@@ -382,7 +382,9 @@ export function HomeEnhancementPanel() {
       key: "weather" as const,
       title: `${t.weatherCard} · ${cityOptions[prefs.city].label[locale]}`,
       value: snapshot.temperature === null ? "—" : `${formatNumber(snapshot.temperature, locale, { maximumFractionDigits: 1 })}°C`,
+      numericValue: snapshot.temperature,
       meta: `Open-Meteo · ${weatherLabel(snapshot.weatherCode, locale)}`,
+      marketKey: "",
       icon: CloudSun,
       change: null as number | null
     }
@@ -492,10 +494,12 @@ export function HomeEnhancementPanel() {
                   ) : null}
                 </div>
                 <p className="mt-4 text-sm font-semibold text-slate-400">{card.title}</p>
-                <p className="mt-1 text-2xl font-black text-white">{isMissing ? t.unavailable : card.value}</p>
+                <p className="mt-1 text-2xl font-black text-white">
+                  {isMissing ? t.unavailable : card.marketKey ? <LivePrice marketKey={card.marketKey} numericValue={card.numericValue}>{card.value}</LivePrice> : card.value}
+                </p>
                 <div className="mt-4 border-t border-white/10 pt-3 text-xs leading-5 text-slate-500">
                   <p>{t.source}: {card.meta}</p>
-                  {snapshot.updatedAt ? <p>{t.updated}: {new Date(snapshot.updatedAt).toLocaleTimeString(locale === "tr" ? "tr-TR" : locale === "el" ? "el-GR" : "en-US", { hour: "2-digit", minute: "2-digit" })}</p> : null}
+                  {snapshot.updatedAt ? <p>{t.updated}: {new Date(snapshot.updatedAt).toLocaleTimeString(locale === "tr" ? "tr-TR" : locale === "el" ? "el-GR" : "en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p> : null}
                 </div>
               </article>
             );

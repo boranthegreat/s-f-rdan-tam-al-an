@@ -2,53 +2,39 @@
 
 import { Activity, CloudSun, Coins, Gem, Landmark } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { getCoinMarkets } from "@/lib/api/coins";
-import { getCurrencyRates } from "@/lib/api/currency";
-import { getGoldRate } from "@/lib/api/gold";
+import { LivePrice } from "@/components/live-market/LivePrice";
+import { coinMarketKey, currencyMarketKey, useLiveMarket } from "@/components/live-market/LiveMarketProvider";
 import { getWeatherForecast } from "@/lib/api/weather";
 import { defaultCities } from "@/data/cities";
 import { formatCurrency, formatPercent, formatRate } from "@/lib/format";
-import type { CoinMarket, CurrencyRate, GoldRate, WeatherForecast } from "@/types";
+import type { CoinMarket, WeatherForecast } from "@/types";
 
 type TickerItem = {
   label: string;
-  value: string;
+  value: React.ReactNode;
   detail: string;
   tone?: "up" | "down" | "neutral";
   icon: React.ComponentType<{ className?: string }>;
 };
 
+const statusLabel = {
+  connecting: "Canlı bağlantı kuruluyor",
+  live: "Saniyelik akış aktif",
+  reconnecting: "Canlı akış yeniden bağlanıyor",
+  fallback: "Yedek veri aktif",
+  offline: "İnternet bağlantısı yok"
+} as const;
+
 export function PrecisionTicker() {
-  const [coins, setCoins] = useState<CoinMarket[]>([]);
-  const [rates, setRates] = useState<CurrencyRate[]>([]);
-  const [gold, setGold] = useState<GoldRate | null>(null);
+  const { coins, rates, gold, status, updatedAt } = useLiveMarket();
   const [weather, setWeather] = useState<WeatherForecast | null>(null);
-  const [updatedAt, setUpdatedAt] = useState("");
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [coinData, rateData, goldData, weatherData] = await Promise.all([
-          getCoinMarkets(),
-          getCurrencyRates("USD"),
-          getGoldRate(),
-          getWeatherForecast(defaultCities[0])
-        ]);
-
-        setCoins(coinData);
-        setRates(rateData);
-        setGold(goldData);
-        setWeather(weatherData);
-        setUpdatedAt(new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date()));
-        setError("");
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Canlı akış verisi alınamadı.");
-      }
+    function loadWeather() {
+      getWeatherForecast(defaultCities[0]).then(setWeather).catch(() => undefined);
     }
-
-    load().catch(() => undefined);
-    const timer = window.setInterval(() => load().catch(() => undefined), 120000);
+    loadWeather();
+    const timer = window.setInterval(loadWeather, 10 * 60 * 1000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -65,19 +51,19 @@ export function PrecisionTicker() {
       coinItem("TRX", trx),
       {
         label: "USD/TRY",
-        value: tryRate ? formatRate(tryRate.rate) : "Bekleniyor",
-        detail: "1 USD karsiligi",
+        value: <LivePrice marketKey="USDTRY" numericValue={tryRate?.rate}>{tryRate ? formatRate(tryRate.rate) : "Bekleniyor"}</LivePrice>,
+        detail: "1 USD karşılığı",
         icon: Landmark
       },
       {
         label: "USD/EUR",
-        value: eurRate ? formatRate(eurRate.rate) : "Bekleniyor",
-        detail: "1 USD karsiligi",
+        value: <LivePrice marketKey={currencyMarketKey("EUR")} numericValue={eurRate?.rate}>{eurRate ? formatRate(eurRate.rate) : "Bekleniyor"}</LivePrice>,
+        detail: "1 USD karşılığı",
         icon: Landmark
       },
       {
         label: "Gram altın",
-        value: gold ? formatCurrency(gold.gramTry, "TRY") : "Bekleniyor",
+        value: <LivePrice marketKey="GOLD_GRAM_TRY" numericValue={gold?.gramTry}>{gold ? formatCurrency(gold.gramTry, "TRY") : "Bekleniyor"}</LivePrice>,
         detail: gold?.source ?? "Altın takip",
         icon: Gem
       },
@@ -91,21 +77,22 @@ export function PrecisionTicker() {
   }, [coins, rates, gold, weather]);
 
   const streamItems = [...items, ...items];
+  const time = updatedAt
+    ? new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(updatedAt)
+    : "";
 
   return (
     <section className="glass-card overflow-hidden p-0">
       <div className="flex flex-col gap-3 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg border border-mint/20 bg-mint/10 text-mint">
-            <Activity className="h-4 w-4" />
-          </span>
+          <span className="grid h-8 w-8 place-items-center rounded-lg border border-mint/20 bg-mint/10 text-mint"><Activity className="h-4 w-4" /></span>
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-mint">Canli hassas veri bandi</p>
-            <p className="text-xs text-slate-500">Kisaltma yok, degerler detayli formatta.</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-mint">Canlı hassas veri bandı</p>
+            <p className="text-xs text-slate-500">Fiyat değiştiği anda yeşil veya kırmızı yanar.</p>
           </div>
         </div>
-        <p className="text-xs font-semibold text-slate-400">
-          {error ? "Veri geçici olarak bekliyor" : updatedAt ? `Son yenileme ${updatedAt}` : "Yükleniyor"}
+        <p className={status === "live" ? "text-xs font-semibold text-emerald-300" : status === "offline" ? "text-xs font-semibold text-rose-300" : "text-xs font-semibold text-amber-200"}>
+          {statusLabel[status]}{time ? ` · ${time}` : ""}
         </p>
       </div>
 
@@ -119,9 +106,7 @@ export function PrecisionTicker() {
                 <div className="min-w-0">
                   <p className="text-[0.68rem] uppercase tracking-[0.18em] text-slate-500">{item.label}</p>
                   <p className="max-w-56 truncate text-sm font-black text-white">{item.value}</p>
-                  <p className={item.tone === "down" ? "text-xs text-rose-300" : item.tone === "up" ? "text-xs text-emerald-300" : "text-xs text-slate-500"}>
-                    {item.detail}
-                  </p>
+                  <p className={item.tone === "down" ? "text-xs text-rose-300" : item.tone === "up" ? "text-xs text-emerald-300" : "text-xs text-slate-500"}>{item.detail}</p>
                 </div>
               </div>
             );
@@ -135,7 +120,7 @@ export function PrecisionTicker() {
 function coinItem(label: string, coin?: CoinMarket): TickerItem {
   return {
     label,
-    value: coin ? formatCurrency(coin.current_price) : "Bekleniyor",
+    value: <LivePrice marketKey={coinMarketKey(label)} numericValue={coin?.current_price}>{coin ? formatCurrency(coin.current_price) : "Bekleniyor"}</LivePrice>,
     detail: coin ? `24s ${formatPercent(coin.price_change_percentage_24h)}` : "Coin verisi",
     tone: coin ? (coin.price_change_percentage_24h >= 0 ? "up" : "down") : "neutral",
     icon: Coins

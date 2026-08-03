@@ -6,24 +6,22 @@ import { AreaChartCard } from "@/components/ChartCard";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { MetricCard } from "@/components/MetricCard";
-import { converterCurrencies, trackedCurrencies } from "@/data/currencies";
-import { convertCurrency, getCurrencyHistory, getCurrencyRates } from "@/lib/api/currency";
+import { LivePrice } from "@/components/live-market/LivePrice";
+import { currencyMarketKey, useLiveMarket } from "@/components/live-market/LiveMarketProvider";
+import { converterCurrencies } from "@/data/currencies";
+import { getCurrencyHistory } from "@/lib/api/currency";
 import { formatCurrency, formatRate } from "@/lib/format";
 import { getRangeDays, type HistoryRange } from "@/lib/history";
 import { useFavorites } from "@/lib/useFavorites";
 import type { CurrencyRate, CurrencyTimePoint } from "@/types";
 
 export function CurrencyPanel({ compact = false }: { compact?: boolean }) {
-  const [rates, setRates] = useState<CurrencyRate[]>([]);
+  const { rates, convert, isLoading, error: marketError } = useLiveMarket();
   const [history, setHistory] = useState<CurrencyTimePoint[]>([]);
   const [amount, setAmount] = useState(100);
   const [from, setFrom] = useState("USD");
   const [to, setTo] = useState("EUR");
-  const [converted, setConverted] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isConverting, setIsConverting] = useState(false);
-  const [error, setError] = useState("");
-  const [conversionError, setConversionError] = useState("");
+  const [historyError, setHistoryError] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyRate | null>(null);
   const [historyRange, setHistoryRange] = useState<HistoryRange>("1W");
   const [detailHistory, setDetailHistory] = useState<CurrencyTimePoint[]>([]);
@@ -32,60 +30,23 @@ export function CurrencyPanel({ compact = false }: { compact?: boolean }) {
   const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
-    async function load() {
-      try {
-        setIsLoading(true);
-        const [ratesData, historyData] = await Promise.all([
-          getCurrencyRates("USD"),
-          getCurrencyHistory("USD", "EUR")
-        ]);
-        setRates([{ code: "USD", name: "US Dollar", rate: 1 }, ...ratesData]);
-        setHistory(historyData);
-        setError("");
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Döviz verileri yüklenemedi.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    load();
+    getCurrencyHistory("USD", "EUR")
+      .then((data) => {
+        setHistory(data);
+        setHistoryError("");
+      })
+      .catch((loadError) => setHistoryError(loadError instanceof Error ? loadError.message : "Döviz geçmişi yüklenemedi."));
   }, []);
-
-  useEffect(() => {
-    async function runConversion() {
-      if (!Number.isFinite(amount) || amount <= 0) {
-        setConverted(0);
-        setConversionError("");
-        return;
-      }
-
-      try {
-        setIsConverting(true);
-        setConverted(await convertCurrency(amount, from, to));
-        setConversionError("");
-      } catch (conversionFailure) {
-        setConverted(null);
-        setConversionError(
-          conversionFailure instanceof Error
-            ? conversionFailure.message
-            : "Döviz çevirisi yapılamadı. Lütfen tekrar deneyin."
-        );
-      } finally {
-        setIsConverting(false);
-      }
-    }
-
-    runConversion();
-  }, [amount, from, to]);
 
   const visibleRates = useMemo(() => (compact ? rates.slice(0, 4) : rates), [compact, rates]);
   const detailTarget = selectedCurrency?.code === "USD" ? "TRY" : (selectedCurrency?.code ?? "EUR");
+  const converted = useMemo(() => {
+    if (!Number.isFinite(amount) || amount <= 0) return 0;
+    return convert(amount, from, to);
+  }, [amount, convert, from, to]);
 
   useEffect(() => {
-    if (!selectedCurrency) {
-      return;
-    }
+    if (!selectedCurrency) return;
 
     async function loadDetailHistory() {
       try {
@@ -103,19 +64,21 @@ export function CurrencyPanel({ compact = false }: { compact?: boolean }) {
     loadDetailHistory();
   }, [detailTarget, historyRange, selectedCurrency]);
 
-  if (isLoading) {
-    return <LoadingSkeleton count={compact ? 4 : 5} />;
-  }
+  if (isLoading && !rates.length) return <LoadingSkeleton count={compact ? 4 : 5} />;
 
   return (
     <div className="space-y-6">
-      {error ? <ErrorState message={error} /> : null}
+      {marketError && !rates.length ? <ErrorState message={marketError} /> : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {visibleRates.map((currency) => (
           <MetricCard
             key={currency.code}
             label={currency.code}
-            value={currency.code === "USD" ? "Baz 1,00" : formatRate(currency.rate)}
+            value={
+              <LivePrice marketKey={currencyMarketKey(currency.code)} numericValue={currency.rate}>
+                {currency.code === "USD" ? "Baz 1,00" : formatRate(currency.rate)}
+              </LivePrice>
+            }
             detail={currency.name}
             onClick={() => setSelectedCurrency(currency)}
             href={`/currency/${currency.code.toLowerCase()}`}
@@ -147,33 +110,27 @@ export function CurrencyPanel({ compact = false }: { compact?: boolean }) {
               />
               <div className="grid grid-cols-2 gap-3">
                 <select className="premium-input" value={from} onChange={(event) => setFrom(event.target.value)}>
-                  {converterCurrencies.map((currency) => (
-                    <option key={currency}>{currency}</option>
-                  ))}
+                  {converterCurrencies.map((currency) => <option key={currency}>{currency}</option>)}
                 </select>
                 <select className="premium-input" value={to} onChange={(event) => setTo(event.target.value)}>
-                  {converterCurrencies.map((currency) => (
-                    <option key={currency}>{currency}</option>
-                  ))}
+                  {converterCurrencies.map((currency) => <option key={currency}>{currency}</option>)}
                 </select>
               </div>
               <div className="rounded-lg border border-line bg-white/5 p-4">
                 <p className="text-sm text-slate-400">Sonuç</p>
                 <p className="mt-2 text-2xl font-black text-white">
-                  {isConverting
-                    ? "Hesaplanıyor..."
-                    : converted === null
-                      ? "Veri alınamadı"
-                      : formatCurrency(converted, to)}
+                  <LivePrice marketKey={from === "USD" ? currencyMarketKey(to) : currencyMarketKey(from)} numericValue={converted}>
+                    {converted === null ? "Veri alınamadı" : formatCurrency(converted, to)}
+                  </LivePrice>
                 </p>
-                {conversionError ? <p className="mt-2 text-xs text-rose-300">{conversionError}</p> : null}
               </div>
             </div>
           </div>
 
-          <AreaChartCard title="USD / EUR 14 Günlük Eğilim" data={history} dataKey="value" />
+          {historyError && !history.length ? <ErrorState message={historyError} /> : <AreaChartCard title="USD / EUR 14 Günlük Eğilim" data={history} dataKey="value" />}
         </div>
       ) : null}
+
       {selectedCurrency ? (
         <AssetHistoryDialog
           title={`USD / ${detailTarget}`}

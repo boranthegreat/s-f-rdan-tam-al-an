@@ -45,9 +45,9 @@ const content: Record<BtgLocale, Record<InfoKind, Content>> = {
       title: "Veri Kaynakları ve Güncellik",
       description: "Kartlarda gördüğün fiyatların, hava verilerinin ve haberlerin hangi sağlayıcılardan geldiğini gösterir.",
       sections: [
-        { title: "Döviz", bullets: ["Frankfurter API: temel döviz kurları ve tarihsel seriler.", "Kartlarda mümkün olduğunda son güncelleme zamanı gösterilir."] },
-        { title: "Kripto", bullets: ["CoinGecko: fiyat, değişim, hacim, piyasa değeri ve grafik verileri.", "CoinLore: CoinGecko erişilemediğinde bazı ekranlarda yedek veri."] },
-        { title: "Altın", bullets: ["Yahoo Finance veya projedeki sunucu katmanı: yaklaşık ons verisi.", "Gram altın hesaplaması kur ve ons verisinden türetilebilir; kuyumcu alış/satış fiyatıyla birebir aynı olmayabilir."] },
+        { title: "Döviz", bullets: ["Binance WebSocket: USDT/TRY ve desteklenen çapraz pariteler için değişim oldukça canlı akış.", "Frankfurter API: tarihsel seri ve canlı bağlantı olmadığında yedek kur verisi."] },
+        { title: "Kripto", bullets: ["Binance WebSocket: desteklenen coinlerde anlık alış-satış ortalamasından canlı fiyat.", "CoinGecko ve CoinLore: 24 saatlik değişim, piyasa değeri, grafik ve yedek veri."] },
+        { title: "Altın", bullets: ["PAXG/USDT ve Binance TRY çapraz canlı akışlarından yaklaşık ons ve gram altın değeri türetilir.", "Bu değer kuyumcu, banka veya Harem Altın alış-satış fiyatıyla birebir aynı değildir; Yahoo Finance tabanlı veri yedek olarak kullanılır."] },
         { title: "Hava", bullets: ["Open-Meteo Geocoding: şehir arama.", "Open-Meteo Forecast: anlık durum ve tahmin."] },
         { title: "Haber ve takvim", bullets: ["GDELT: dil ve kategori bazlı haber akışı.", "Finnhub: API anahtarı eklendiğinde ekonomi takvimi."] },
         { title: "Yapay zekâ", bullets: ["OpenAI: anahtar eklendiğinde BorAI'nin bulut yanıt modu.", "Anahtar yoksa proje yerel yardımcı metinlerle çalışabilir."] },
@@ -97,9 +97,9 @@ const content: Record<BtgLocale, Record<InfoKind, Content>> = {
       { title: "Changes", paragraphs: ["Terms may change with features or regulation. Continued use means acceptance of the current terms."] }
     ] },
     sources: { eyebrow: "Data trust", title: "Data Sources and Freshness", description: "Shows where prices, weather data and news come from.", sections: [
-      { title: "Foreign exchange", bullets: ["Frankfurter API for core rates and historical series.", "Cards show an update time whenever possible."] },
-      { title: "Crypto", bullets: ["CoinGecko for prices, changes, volume, market cap and charts.", "CoinLore as a fallback on selected screens."] },
-      { title: "Gold", bullets: ["Yahoo Finance or the project server layer for approximate ounce data.", "Gram gold can be derived from FX and ounce values and may differ from retail quotes."] },
+      { title: "Foreign exchange", bullets: ["Binance WebSocket for USDT/TRY and supported cross-rate updates whenever the market changes.", "Frankfurter API for historical series and fallback rates when the live stream is unavailable."] },
+      { title: "Crypto", bullets: ["Binance WebSocket for live prices derived from the best bid and ask on supported assets.", "CoinGecko and CoinLore for 24-hour metrics, charts, market data and fallback values."] },
+      { title: "Gold", bullets: ["Approximate ounce and gram values are derived from live PAXG/USDT and USDT/TRY streams.", "These values may differ from jeweller, bank or physical-market bid/ask quotes; Yahoo-based data remains a fallback."] },
       { title: "Weather", bullets: ["Open-Meteo Geocoding for city search.", "Open-Meteo Forecast for current conditions and forecasts."] },
       { title: "News and calendar", bullets: ["GDELT for language and category-based news.", "Finnhub for the economic calendar when a key is configured."] },
       { title: "Artificial intelligence", bullets: ["OpenAI for BorAI cloud responses when a key is configured.", "The project may use local helper responses without a key."] },
@@ -138,9 +138,9 @@ const content: Record<BtgLocale, Record<InfoKind, Content>> = {
       { title: "Αλλαγές", paragraphs: ["Οι όροι μπορεί να ενημερωθούν. Η συνέχιση χρήσης σημαίνει αποδοχή των τρεχόντων όρων."] }
     ] },
     sources: { eyebrow: "Εμπιστοσύνη δεδομένων", title: "Πηγές δεδομένων και ενημέρωση", description: "Δείχνει από πού προέρχονται τιμές, καιρός και ειδήσεις.", sections: [
-      { title: "Συνάλλαγμα", bullets: ["Frankfurter API για ισοτιμίες και ιστορικά δεδομένα.", "Οι κάρτες εμφανίζουν ώρα ενημέρωσης όπου είναι δυνατό."] },
-      { title: "Κρυπτονομίσματα", bullets: ["CoinGecko για τιμές, μεταβολές, όγκο, κεφαλαιοποίηση και γραφήματα.", "CoinLore ως εφεδρική πηγή σε ορισμένες οθόνες."] },
-      { title: "Χρυσός", bullets: ["Yahoo Finance ή το επίπεδο server για ενδεικτική τιμή ουγγιάς.", "Η τιμή γραμμαρίου μπορεί να διαφέρει από λιανικές τιμές."] },
+      { title: "Συνάλλαγμα", bullets: ["Binance WebSocket για USDT/TRY και υποστηριζόμενες διασταυρούμενες ισοτιμίες όταν αλλάζει η αγορά.", "Frankfurter API για ιστορικά δεδομένα και εφεδρικές τιμές όταν δεν υπάρχει ζωντανή σύνδεση."] },
+      { title: "Κρυπτονομίσματα", bullets: ["Binance WebSocket για ζωντανές τιμές στα υποστηριζόμενα στοιχεία.", "CoinGecko και CoinLore για μεταβολές 24ώρου, γραφήματα, στοιχεία αγοράς και εφεδρικές τιμές."] },
+      { title: "Χρυσός", bullets: ["Ενδεικτικές τιμές ουγγιάς και γραμμαρίου προκύπτουν από τις ζωντανές ροές PAXG/USDT και USDT/TRY.", "Μπορεί να διαφέρουν από τιμές αγοράς/πώλησης κοσμηματοπωλείων, τραπεζών ή φυσικής αγοράς· τα δεδομένα Yahoo παραμένουν εφεδρικά."] },
       { title: "Καιρός", bullets: ["Open-Meteo Geocoding για αναζήτηση πόλης.", "Open-Meteo Forecast για τρέχοντα στοιχεία και πρόγνωση."] },
       { title: "Ειδήσεις και ημερολόγιο", bullets: ["GDELT για ειδήσεις ανά γλώσσα και κατηγορία.", "Finnhub για οικονομικό ημερολόγιο όταν υπάρχει κλειδί."] },
       { title: "Τεχνητή νοημοσύνη", bullets: ["OpenAI για απαντήσεις cloud του BorAI όταν υπάρχει κλειδί.", "Χωρίς κλειδί μπορεί να λειτουργεί τοπική βοήθεια."] },

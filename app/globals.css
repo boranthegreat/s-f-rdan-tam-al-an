@@ -703,3 +703,50 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* BTG_REALTIME_MARKET */
+.live-price-value {
+  display: inline-block;
+  border-radius: 0.45rem;
+  padding-inline: 0.12rem;
+  margin-inline: -0.12rem;
+  will-change: color, background-color, box-shadow, transform;
+}
+
+.live-price-up {
+  animation: live-price-rise 720ms ease-out;
+}
+
+.live-price-down {
+  animation: live-price-fall 720ms ease-out;
+}
+
+@keyframes live-price-rise {
+  0% {
+    color: #86efac;
+    background-color: rgba(34, 197, 94, 0.34);
+    box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.42), 0 0 26px rgba(34, 197, 94, 0.26);
+    transform: translateY(-1px) scale(1.035);
+  }
+  100% {
+    color: inherit;
+    background-color: transparent;
+    box-shadow: none;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes live-price-fall {
+  0% {
+    color: #fda4af;
+    background-color: rgba(244, 63, 94, 0.34);
+    box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.42), 0 0 26px rgba(244, 63, 94, 0.26);
+    transform: translateY(1px) scale(1.035);
+  }
+  100% {
+    color: inherit;
+    background-color: transparent;
+    box-shadow: none;
+    transform: translateY(0) scale(1);
+  }
+}

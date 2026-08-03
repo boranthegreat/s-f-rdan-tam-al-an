@@ -7,8 +7,9 @@ import { usePathname } from "next/navigation";
 import { AreaChartCard } from "@/components/ChartCard";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
-import { convertCurrency } from "@/lib/api/currency";
 import { formatCurrencyPrecise, formatNumber, formatPercent } from "@/lib/format";
+import { LivePrice } from "@/components/live-market/LivePrice";
+import { coinMarketKey, useLiveMarket } from "@/components/live-market/LiveMarketProvider";
 import { useAlerts } from "@/lib/useAlerts";
 import { useFavorites } from "@/lib/useFavorites";
 import { usePortfolio } from "@/lib/usePortfolio";
@@ -28,9 +29,9 @@ export function CoinDetailPanel({ id }: { id: string }) {
   const [coin, setCoin] = useState<CoinDetail | null>(null);
   const [error, setError] = useState("");
   const [currency, setCurrency] = useState<"USD" | "TRY" | "EUR">("USD");
-  const [rate, setRate] = useState(1);
   const [days, setDays] = useState(30);
   const [target, setTarget] = useState(0);
+  const { coins, getRate } = useLiveMarket();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { upsertAsset } = usePortfolio();
   const { addAlert } = useAlerts();
@@ -48,22 +49,16 @@ export function CoinDetailPanel({ id }: { id: string }) {
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Coin detayı yüklenemedi."));
   }, [id, locale]);
 
-  useEffect(() => {
-    if (currency === "USD") {
-      setRate(1);
-      if (coin) setTarget(coin.currentPrice);
-      return;
-    }
-    convertCurrency(1, "USD", currency)
-      .then((nextRate) => {
-        setRate(nextRate);
-        if (coin) setTarget(coin.currentPrice * nextRate);
-      })
-      .catch(() => {
-        setRate(1);
-        if (coin) setTarget(coin.currentPrice);
-      });
-  }, [coin, currency]);
+  const liveCoin = coin ? coins.find((item) => item.id === coin.id || item.symbol.toUpperCase() === coin.symbol.toUpperCase()) : undefined;
+  const liveUsdPrice = liveCoin?.current_price ?? coin?.currentPrice ?? 0;
+  const rate = currency === "USD" ? 1 : getRate(currency) || 1;
+
+
+  const handleCurrencyChange = (nextCurrency: "USD" | "TRY" | "EUR") => {
+    const nextRate = nextCurrency === "USD" ? 1 : getRate(nextCurrency) || 1;
+    setCurrency(nextCurrency);
+    setTarget(liveUsdPrice * nextRate);
+  };
 
   const history = useMemo(() => {
     if (!coin) return [];
@@ -74,7 +69,7 @@ export function CoinDetailPanel({ id }: { id: string }) {
   if (error) return <ErrorState message={error} />;
   if (!coin) return <LoadingSkeleton count={6} />;
 
-  const price = coin.currentPrice * rate;
+  const price = liveUsdPrice * rate;
   const favoriteId = `coin:${coin.id}`;
 
   return (
@@ -91,12 +86,12 @@ export function CoinDetailPanel({ id }: { id: string }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {(["USD", "TRY", "EUR"] as const).map((item) => (
-              <button key={item} className={currency === item ? "premium-button" : "rounded-xl border border-line bg-white/5 px-4 py-2 text-sm font-bold text-slate-300"} onClick={() => setCurrency(item)}>{item}</button>
+              <button key={item} className={currency === item ? "premium-button" : "rounded-xl border border-line bg-white/5 px-4 py-2 text-sm font-bold text-slate-300"} onClick={() => handleCurrencyChange(item)}>{item}</button>
             ))}
           </div>
         </div>
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Güncel fiyat" value={formatCurrencyPrecise(price, currency)} />
+          <Stat label="Güncel fiyat" value={<LivePrice marketKey={coinMarketKey(coin.symbol)} numericValue={price}>{formatCurrencyPrecise(price, currency)}</LivePrice>} />
           <Stat label="24s değişim" value={formatPercent(coin.change24h)} tone={coin.change24h >= 0 ? "positive" : "negative"} />
           <Stat label="24s en yüksek" value={formatCurrencyPrecise(coin.high24h * rate, currency)} />
           <Stat label="24s en düşük" value={formatCurrencyPrecise(coin.low24h * rate, currency)} />
@@ -137,6 +132,6 @@ export function CoinDetailPanel({ id }: { id: string }) {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "positive" | "negative" }) {
+function Stat({ label, value, tone }: { label: string; value: React.ReactNode; tone?: "positive" | "negative" }) {
   return <div className="rounded-2xl border border-line bg-white/[0.04] p-4"><p className="text-xs text-slate-500">{label}</p><p className={tone === "positive" ? "mt-2 text-lg font-black text-emerald-300" : tone === "negative" ? "mt-2 text-lg font-black text-rose-300" : "mt-2 break-words text-lg font-black text-white"}>{value}</p></div>;
 }

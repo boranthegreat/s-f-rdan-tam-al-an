@@ -1,4 +1,4 @@
-const CACHE_NAME = "btg-shell-v4";
+const CACHE_NAME = "btg-shell-v5-live";
 const OFFLINE_URLS = ["/tr/offline", "/en/offline", "/el/offline"];
 const PUSH_CACHE = "btg-push-state";
 const PUSH_TOKEN_URL = "/__btg_push_token__";
