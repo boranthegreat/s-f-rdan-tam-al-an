@@ -1,9 +1,25 @@
 "use client";
 
+import Script from "next/script";
 import { Bot, Loader2, MessageCircle, Send, Sparkles, X } from "lucide-react";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { askAssistant } from "@/lib/api/assistant";
 import type { AssistantMessage } from "@/types";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (element: HTMLElement, options: {
+        sitekey: string;
+        action?: string;
+        callback: (token: string) => void;
+        "expired-callback"?: () => void;
+        "error-callback"?: () => void;
+      }) => string;
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
 
 const starterPrompts = ["Merhaba nasılsın?", "Adın ne?", "Instagram adresin ne?", "Hello, how are you?"];
 
@@ -12,6 +28,10 @@ export function AIAssistantWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"ai" | "local">("local");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | undefined>();
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const [messages, setMessages] = useState<AssistantMessage[]>([
     {
       role: "assistant",
@@ -23,9 +43,23 @@ export function AIAssistantWidget() {
 
   const visibleMessages = useMemo(() => messages.slice(-8), [messages]);
 
+  useEffect(() => {
+    if (!open || !siteKey || !turnstileRef.current || !window.turnstile || turnstileWidgetId.current) {
+      return;
+    }
+
+    turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+      sitekey: siteKey,
+      action: "borai",
+      callback: (token) => setTurnstileToken(token),
+      "expired-callback": () => setTurnstileToken(""),
+      "error-callback": () => setTurnstileToken("")
+    });
+  }, [open, siteKey]);
+
   async function sendQuestion(question: string) {
     const trimmed = question.trim();
-    if (!trimmed || loading) {
+    if (!trimmed || loading || !turnstileToken) {
       return;
     }
 
@@ -35,9 +69,13 @@ export function AIAssistantWidget() {
     setLoading(true);
 
     try {
-      const response = await askAssistant(nextMessages);
+      const response = await askAssistant(nextMessages, turnstileToken);
       setMode(response.mode);
       setMessages([...nextMessages, { role: "assistant", content: response.answer }]);
+      setTurnstileToken("");
+      if (turnstileWidgetId.current) {
+        window.turnstile?.reset(turnstileWidgetId.current);
+      }
     } catch (error) {
       setMessages([
         ...nextMessages,
@@ -46,6 +84,10 @@ export function AIAssistantWidget() {
           content: error instanceof Error ? error.message : "BorAI su anda cevap veremedi. Biraz sonra tekrar dene."
         }
       ]);
+      setTurnstileToken("");
+      if (turnstileWidgetId.current) {
+        window.turnstile?.reset(turnstileWidgetId.current);
+      }
     } finally {
       setLoading(false);
     }
@@ -58,6 +100,21 @@ export function AIAssistantWidget() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        strategy="afterInteractive"
+        onLoad={() => {
+          if (open && siteKey && turnstileRef.current && window.turnstile && !turnstileWidgetId.current) {
+            turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+              sitekey: siteKey,
+              action: "borai",
+              callback: (token) => setTurnstileToken(token),
+              "expired-callback": () => setTurnstileToken(""),
+              "error-callback": () => setTurnstileToken("")
+            });
+          }
+        }}
+      />
       {open ? (
         <section className="glass-card flex h-[34rem] w-[calc(100vw-2rem)] max-w-md flex-col shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
           <div className="flex items-center justify-between border-b border-line p-4">
@@ -100,13 +157,15 @@ export function AIAssistantWidget() {
           </div>
 
           <div className="border-t border-line p-4">
+            <div ref={turnstileRef} className="mb-3 min-h-[65px]" aria-label="Cloudflare guvenlik dogrulamasi" />
             <div className="mb-3 flex flex-wrap gap-2">
               {starterPrompts.map((prompt) => (
                 <button
                   key={prompt}
-                  className="rounded-full border border-line bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-mint/40 hover:text-white"
+                  className="rounded-full border border-line bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-mint/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={() => void sendQuestion(prompt)}
                   type="button"
+                  disabled={!turnstileToken || loading}
                 >
                   {prompt}
                 </button>
@@ -118,9 +177,10 @@ export function AIAssistantWidget() {
                 className="premium-input min-w-0 flex-1"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="Bir sey sor..."
+                placeholder={turnstileToken ? "Bir sey sor..." : "Once guvenlik dogrulamasini tamamla..."}
+                disabled={!turnstileToken || loading}
               />
-              <button className="premium-button grid h-10 w-10 place-items-center px-0" type="submit" aria-label="Soruyu gonder">
+              <button className="premium-button grid h-10 w-10 place-items-center px-0 disabled:cursor-not-allowed disabled:opacity-50" type="submit" aria-label="Soruyu gonder" disabled={!turnstileToken || loading}>
                 <Send className="h-4 w-4" />
               </button>
             </form>
