@@ -3,6 +3,43 @@ import { isLocale, localizedPath, stripLocalePrefix } from "@/lib/i18n";
 
 const PUBLIC_FILE = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest|js|map)$/i;
 
+async function verifyTurnstile(request: NextRequest) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  const token = request.headers.get("X-Turnstile-Token");
+
+  if (!secret || !token) {
+    return false;
+  }
+
+  try {
+    const formData = new URLSearchParams();
+    formData.set("secret", secret);
+    formData.set("response", token);
+    formData.set("remoteip", request.ip ?? "");
+
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData.toString()
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const result = (await response.json()) as {
+      success?: boolean;
+      hostname?: string;
+      action?: string;
+    };
+
+    const allowedHostnames = new Set(["boranthegreat.xyz", "www.boranthegreat.xyz"]);
+    return Boolean(result.success && result.action === "borai" && result.hostname && allowedHostnames.has(result.hostname));
+  } catch {
+    return false;
+  }
+}
+
 function preferredLocale(request: NextRequest) {
   const queryLocale = request.nextUrl.searchParams.get("lang");
   if (isLocale(queryLocale)) return queryLocale;
@@ -28,8 +65,16 @@ function preferredLocale(request: NextRequest) {
   return "tr";
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  if (pathname === "/api/assistant") {
+    const valid = await verifyTurnstile(request);
+    if (!valid) {
+      return NextResponse.json({ message: "Guvenlik dogrulamasi basarisiz. Lutfen tekrar deneyin." }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
 
   if (
     pathname.startsWith("/api/") ||
